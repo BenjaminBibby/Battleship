@@ -21,15 +21,12 @@ namespace BattleshipServer
         private static object connectedUsersLock = new object();
         static void Main(string[] args)
         {
+            Console.Title = "Server";
             Thread UDPthread = new Thread(UDPServer);
             UDPthread.Start();
-            //UDPServer();
             TcpServer(port);
-            //TCPServer();
-            TCPClient("10.131.164.249","11000");
-            //UDPServer();
+            TCPClient();
             UDPServer();
-            //TCPServer();
 
             Console.ReadLine();
         }
@@ -45,18 +42,15 @@ namespace BattleshipServer
         {
             while (isRunning)
             {
+                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
+                int port = 11000;
+                Byte[] bytes = new Byte[256];
+                string data = null;
                 TcpClient newClient = server.AcceptTcpClient();
                 Thread t = new Thread(new ParameterizedThreadStart(HandleClient));
                 t.Start(newClient);
             }
         }
-                
-                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
-                int port = 11000;
-                IPAddress localAddress = IPAddress.Parse("10.131.164.249");
-                server = new TcpListener(localAddress, port);
-                Byte[] bytes = new Byte[256];
-                string data = null;
 
         public static void HandleClient(object obj)
         {
@@ -93,7 +87,7 @@ namespace BattleshipServer
                     Thread.CurrentThread.Abort();
                 }
                 //You could write something back to the client here.
-                sWriter.WriteLine("Et eller andet hej eller whatever");
+                sWriter.WriteLine("Server received your message!");
                 sWriter.Flush();
 
             }
@@ -102,17 +96,6 @@ namespace BattleshipServer
         {
             string msg = "Connected!";
             
-            TcpClient client = new TcpClient(IP, port);
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
-            NetworkStream stream = client.GetStream();
-            stream.Write(data, 0, data.Length);
-            Console.WriteLine("Message sent: {0}", msg);
-            data = new byte[256];
-            string responseString = string.Empty;
-            int bytes = stream.Read(data, 0, data.Length);
-            responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-            stream.Close();
-            client.Close();
             while (true)
             {
                 if (udpIP != null)

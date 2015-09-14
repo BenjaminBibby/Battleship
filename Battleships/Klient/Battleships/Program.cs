@@ -13,9 +13,10 @@ namespace Battleships
     {
         static void Main(string[] args)
         {
+            Console.Title = "Client";
             UDPClient();
             TCPServer();
-            TCPClient c = new TCPClient("192.168.43.39", 11000);
+            TCPClient c = new TCPClient("127.0.0.1", 11000);
             
             Console.ReadLine();
         }
@@ -71,7 +72,7 @@ namespace Battleships
         {
             string ascii = "11000";
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IPAddress beaconIP = IPAddress.Parse("192.168.43.255");
+            IPAddress beaconIP = IPAddress.Parse(GetBroadcastIPAdress());
             byte[] sendBuf = Encoding.ASCII.GetBytes(ascii);
             IPEndPoint ep = new IPEndPoint(beaconIP, 11000);
             socket.SendTo(sendBuf, ep);
@@ -87,6 +88,25 @@ namespace Battleships
                 }
             }
             throw new Exception("Local IP Address Not Found!");
+        }
+
+        public static string GetBroadcastIPAdress()
+        {
+            string broadcastIp = "";
+            string[] ip = GetLocalIPAddress().Split('.');
+
+            for (int i = 0; i < ip.Length - 1; i++)
+			{
+                broadcastIp += ip[i] + ".";
+			}
+
+            broadcastIp += "255";
+            Console.WriteLine(broadcastIp);
+            
+            //string broadcastIp = GetLocalIPAddress().Substring(9);
+            //broadcastIp = GetLocalIPAddress().Replace(broadcastIp, ".255");
+
+            return broadcastIp;
         }
 
     }
