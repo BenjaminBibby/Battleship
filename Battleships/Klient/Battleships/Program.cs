@@ -16,6 +16,7 @@ namespace Battleships
             UDPClient();
             TCPServer();
             Console.ReadLine();
+            TCPServer();
         }
         static void TCPServer()
         {
