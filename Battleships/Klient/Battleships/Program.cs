@@ -13,6 +13,7 @@ namespace Battleships
     {
         static void Main(string[] args)
         {
+            TCPServer();
 
         }
         static void TCPServer()
