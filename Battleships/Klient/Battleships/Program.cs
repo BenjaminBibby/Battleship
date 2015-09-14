@@ -15,8 +15,9 @@ namespace Battleships
         {
             UDPClient();
             TCPServer();
+            TCPClient c = new TCPClient("192.168.43.39", 11000);
+            
             Console.ReadLine();
-            TCPServer();
         }
         static void TCPServer()
         {
@@ -24,15 +25,14 @@ namespace Battleships
             try
             {
                 int port = 11000;
-                IPAddress localAddress = IPAddress.Parse("192.168.43.168");
+                IPAddress localAddress = IPAddress.Parse(GetLocalIPAddress());
                 server = new TcpListener(localAddress, port);
                 Byte[] bytes = new Byte[256];
                 string data = null;
 
                 server.Start();
                 //Console.WriteLine("Type 's' to start the TCPServer");
-                while (true)
-                {
+                
                     Console.WriteLine("Waiting..");
 
                     TcpClient client = server.AcceptTcpClient(); //Three way handshake
@@ -50,10 +50,11 @@ namespace Battleships
                         //stream.Write(msg, 0, msg.Length);
                         //Console.WriteLine("Message sent: {0}", data);
                         //File.AppendAllText(@"C:\Temp\text.txt", Environment.NewLine + "Besked:" + data + " \\ IP:Port: " + client.Client.RemoteEndPoint.ToString() + " \\ Time when recieved:" + DateTime.Now.ToString());
+                    
                     }
 
                     client.Close();
-                }
+                
             }
 
             catch (SocketException e)
@@ -64,8 +65,6 @@ namespace Battleships
             {
                 server.Stop();
             }
-            Console.WriteLine("Press any key to close");
-            Console.ReadLine();
         }
         static void UDPClient()
         {
@@ -75,6 +74,18 @@ namespace Battleships
             byte[] sendBuf = Encoding.ASCII.GetBytes(ascii);
             IPEndPoint ep = new IPEndPoint(beaconIP, 11000);
             socket.SendTo(sendBuf, ep);
+        }
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("Local IP Address Not Found!");
         }
 
     }
