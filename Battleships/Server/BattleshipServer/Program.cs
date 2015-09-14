@@ -15,17 +15,17 @@ namespace BattleshipServer
         private static bool done = false;
         static void Main(string[] args)
         {
-            TCPServer();
-           // TCPClient("IP","PORT");
-            UDPServer();
+            //TCPServer();
+            TCPClient("10.131.164.249","11000");
+            //UDPServer();
         }
         static void TCPServer()
         {
             TcpListener server = null;
             try
             {
-                int port = 11000;
-                IPAddress localAddress = IPAddress.Parse("10.131.66.252");
+                
+                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
                 server = new TcpListener(localAddress, port);
                 Byte[] bytes = new Byte[256];
                 string data = null;
@@ -70,7 +70,7 @@ namespace BattleshipServer
         }
         static void TCPClient(string IP, string msg)
         {
-            int port = 13000;
+            
             TcpClient client = new TcpClient(IP, port);
             byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
             NetworkStream stream = client.GetStream();
