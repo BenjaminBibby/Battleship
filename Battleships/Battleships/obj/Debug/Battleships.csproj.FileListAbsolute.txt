@@ -1,2 +1,0 @@
-c:\users\thom441c\documents\visual studio 2013\Projects\Battleships\Battleships\bin\Debug\Battleships.exe.config
-C:\Users\Simon\Desktop\Skole\Battleship\Battleships\Battleships\bin\Debug\Battleships.exe.config
