@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Threading;
 
 namespace BattleshipServer
 {
@@ -13,19 +14,26 @@ namespace BattleshipServer
     {
         private const int port = 11000;
         private static bool done = false;
+        private static string udpIP; 
         static void Main(string[] args)
         {
-            TCPServer();
-           // TCPClient("IP","PORT");
+            //TCPServer();
+            TCPClient("10.131.164.249","11000");
+            //UDPServer();
             UDPServer();
+            //TCPServer();
+
+            Console.ReadLine();
         }
         static void TCPServer()
         {
             TcpListener server = null;
             try
             {
+                
+                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
                 int port = 11000;
-                IPAddress localAddress = IPAddress.Parse("10.131.66.252");
+                IPAddress localAddress = IPAddress.Parse("10.131.164.249");
                 server = new TcpListener(localAddress, port);
                 Byte[] bytes = new Byte[256];
                 string data = null;
@@ -70,7 +78,7 @@ namespace BattleshipServer
         }
         static void TCPClient(string IP, string msg)
         {
-            int port = 13000;
+            
             TcpClient client = new TcpClient(IP, port);
             byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
             NetworkStream stream = client.GetStream();
@@ -82,17 +90,45 @@ namespace BattleshipServer
             responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
             stream.Close();
             client.Close();
+            while (true)
+            {
+                if (udpIP != null)
+                {
+                    try
+                    {
+                        TcpClient client = new TcpClient(udpIP, port);
+                        byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                        NetworkStream stream = client.GetStream();
+                        stream.Write(data, 0, data.Length);
+                        Console.WriteLine("Message sent: {0}", msg);
+                        data = new byte[256];
+                        string responseString = string.Empty;
+                        //int bytes = stream.Read(data, 0, data.Length);
+                        //responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                        stream.Close();
+                        client.Close();
+                        Thread.CurrentThread.Abort();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("TCP Client: " + e.Message);
+                    }     
+                }
+            }
         }
         static void UDPServer()
         {
             UdpClient listener = new UdpClient(port);
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, port);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse("192.168.43.39"), port);
+
             while (!done)
             {
                 Console.WriteLine("Venter på opkald..");
                 byte[] bytes = listener.Receive(ref groupEP);
+                udpIP = groupEP.Address.ToString();
                 Console.WriteLine("Recieved broadcast from {0}: \n {1}\n", groupEP.ToString(), Encoding.ASCII.GetString(bytes, 0, bytes.Length));
-
+                Thread clientThread = new Thread(() => TCPClient("10.131.74.125", "Connected"));
+                clientThread.Start();
             }
         }
     }

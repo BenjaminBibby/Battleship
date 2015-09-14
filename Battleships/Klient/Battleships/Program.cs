@@ -13,7 +13,10 @@ namespace Battleships
     {
         static void Main(string[] args)
         {
-
+            UDPClient();
+            TCPServer();
+            Console.ReadLine();
+            TCPServer();
         }
         static void TCPServer()
         {
@@ -21,7 +24,7 @@ namespace Battleships
             try
             {
                 int port = 11000;
-                IPAddress localAddress = IPAddress.Parse("10.131.66.252");
+                IPAddress localAddress = IPAddress.Parse("192.168.43.168");
                 server = new TcpListener(localAddress, port);
                 Byte[] bytes = new Byte[256];
                 string data = null;
@@ -66,9 +69,9 @@ namespace Battleships
         }
         static void UDPClient()
         {
-            string ascii = "Hej";
+            string ascii = "11000";
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IPAddress beaconIP = IPAddress.Parse("10.131.164.234");
+            IPAddress beaconIP = IPAddress.Parse("192.168.43.255");
             byte[] sendBuf = Encoding.ASCII.GetBytes(ascii);
             IPEndPoint ep = new IPEndPoint(beaconIP, 11000);
             socket.SendTo(sendBuf, ep);
