@@ -14,65 +14,81 @@ namespace BattleshipServer
     {
         private const int port = 11000;
         private static bool done = false;
-        private static string udpIP; 
+        private static string udpIP;
+        private static bool isRunning;
+        private static TcpListener server;
+        private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
+        private static object connectedUsersLock = new object();
         static void Main(string[] args)
         {
-            UDPServer();
-            //TCPServer();
+            Thread UDPthread = new Thread(UDPServer);
+            UDPthread.Start();
+            //UDPServer();
+            TcpServer(port);
 
             Console.ReadLine();
         }
-        static void TCPServer()
+        static void TcpServer(int port)
         {
-            TcpListener server = null;
-            try
+            server = new TcpListener(IPAddress.Any, port);
+            server.Start();
+            isRunning = true;
+            LoopClient();
+        }
+
+        public static void LoopClient()
+        {
+            while (isRunning)
             {
-                int port = 11000;
-                IPAddress localAddress = IPAddress.Parse("10.131.164.249");
-                server = new TcpListener(localAddress, port);
-                Byte[] bytes = new Byte[256];
-                string data = null;
+                TcpClient newClient = server.AcceptTcpClient();
+                Thread t = new Thread(new ParameterizedThreadStart(HandleClient));
+                t.Start(newClient);
+            }
+        }
 
-                server.Start();
-                //Console.WriteLine("Type 's' to start the TCPServer");
-                while (true)
-                {
-                    Console.WriteLine("Waiting..");
+        public static void HandleClient(object obj)
+        {
+            TcpClient client = (TcpClient)obj;
+            StreamReader sReader = new StreamReader(client.GetStream(), Encoding.ASCII);
+            StreamWriter sWriter = new StreamWriter(client.GetStream(), Encoding.ASCII);
 
-                    TcpClient client = server.AcceptTcpClient(); //Three way handshake
-                    Console.WriteLine("Connection established\nIP: {0}", client.Client.RemoteEndPoint.ToString());
+            string sData = null;
+            IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
+            IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
+            Console.WriteLine(endPoint + " connected!");
+            lock(connectedUsersLock)
+            {
+                connectedUsers.Add(endPoint);
+            }
+            Console.WriteLine("Connected users: {0}", connectedUsers.Count);
 
-                    data = null;
-                    NetworkStream stream = client.GetStream();
-                    int i = 0;
-                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    {
-                        data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                        Console.WriteLine("Data recieved: {0}", data);
-                        //data = data.ToUpper();
-                        //byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
-                        //stream.Write(msg, 0, msg.Length);
-                        //Console.WriteLine("Message sent: {0}", data);
-                        //File.AppendAllText(@"C:\Temp\text.txt", Environment.NewLine + "Besked:" + data + " \\ IP:Port: " + client.Client.RemoteEndPoint.ToString() + " \\ Time when recieved:" + DateTime.Now.ToString());
-                    }
-
-                    client.Close();
+            while (client.Connected)
+            {
+                try
+                {                   
+                    sData = sReader.ReadLine();
+                    Console.WriteLine(sData);
                 }
-            }
+                catch (Exception)
+                {
+                    Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
 
-            catch (SocketException e)
-            {
-                Console.WriteLine("SocketException: {0}", e);
+                    lock (connectedUsersLock)
+                    {
+                        connectedUsers.Remove(endPoint);
+                    } 
+                    Console.WriteLine("Connected users: {0}", connectedUsers.Count);
+                    Thread.CurrentThread.Abort();
+                }
+                //You could write something back to the client here.
+                sWriter.WriteLine("Et eller andet hej eller whatever");
+                sWriter.Flush();
+
             }
-            finally
-            {
-                server.Stop();
-            }
-            Console.WriteLine("Press any key to close");
-            Console.ReadLine();
         }
-        static void TCPClient(string IP, string msg)
+        static void TCPClient()
         {
+            string msg = "Connected!";
             while (true)
             {
                 if (udpIP != null)
@@ -102,7 +118,7 @@ namespace BattleshipServer
         static void UDPServer()
         {
             UdpClient listener = new UdpClient(port);
-            IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse("192.168.43.39"), port);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse(GetLocalIPAddress()), port);
 
             while (!done)
             {
@@ -110,9 +126,21 @@ namespace BattleshipServer
                 byte[] bytes = listener.Receive(ref groupEP);
                 udpIP = groupEP.Address.ToString();
                 Console.WriteLine("Recieved broadcast from {0}: \n {1}\n", groupEP.ToString(), Encoding.ASCII.GetString(bytes, 0, bytes.Length));
-                Thread clientThread = new Thread(() => TCPClient("10.131.74.125", "Connected"));
+                Thread clientThread = new Thread(() => TCPClient());
                 clientThread.Start();
             }
+        }
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("Local IP Address Not Found!");
         }
     }
 }
