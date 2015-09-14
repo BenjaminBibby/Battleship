@@ -25,6 +25,11 @@ namespace BattleshipServer
             UDPthread.Start();
             //UDPServer();
             TcpServer(port);
+            //TCPServer();
+            TCPClient("10.131.164.249","11000");
+            //UDPServer();
+            UDPServer();
+            //TCPServer();
 
             Console.ReadLine();
         }
@@ -45,6 +50,13 @@ namespace BattleshipServer
                 t.Start(newClient);
             }
         }
+                
+                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
+                int port = 11000;
+                IPAddress localAddress = IPAddress.Parse("10.131.164.249");
+                server = new TcpListener(localAddress, port);
+                Byte[] bytes = new Byte[256];
+                string data = null;
 
         public static void HandleClient(object obj)
         {
@@ -89,6 +101,18 @@ namespace BattleshipServer
         static void TCPClient()
         {
             string msg = "Connected!";
+            
+            TcpClient client = new TcpClient(IP, port);
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+            NetworkStream stream = client.GetStream();
+            stream.Write(data, 0, data.Length);
+            Console.WriteLine("Message sent: {0}", msg);
+            data = new byte[256];
+            string responseString = string.Empty;
+            int bytes = stream.Read(data, 0, data.Length);
+            responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+            stream.Close();
+            client.Close();
             while (true)
             {
                 if (udpIP != null)
