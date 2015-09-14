@@ -19,6 +19,7 @@ namespace Battleships
             
             Console.ReadLine();
         }
+
         static void TCPServer()
         {
             TcpListener server = null;
