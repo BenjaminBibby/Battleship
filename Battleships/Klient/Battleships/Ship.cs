@@ -27,9 +27,27 @@ namespace Battleships
             this.size = size;
             this.isHorizontal = horizontal;
         }
-        public void DestroyShip()
+        public void Destroy()
         {
-            // Destroy ship.
+            
+        }
+        public void DeployShip(Map map, int posX, int posY, bool horizontal)
+        { 
+            // Deploy ship.
+        }
+        public void Draw()
+        { 
+            // Draw ship.
+            for (int i = 0; i < size; i++)
+            {
+                int nextPosX = (isHorizontal == true ? (posX + i) : posX);
+                int nextPosY = (isHorizontal == true ? posY : (posY + i));
+
+                Console.SetCursorPosition(nextPosX, nextPosY);
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.Write(" ");
+                Console.BackgroundColor = ConsoleColor.Black;
+            }
         }
     }
 }

@@ -24,12 +24,24 @@ namespace Battleships
             }
         }
         private Tile[,] tiles;
-        private int posX, posY;
+        private int posX, posY, width, height;
+        public int PosX
+        {
+            get { return posX; }
+            set { value = posX; }
+        }
+        public int PosY
+        { 
+            get { return posY; }
+            set { value = posY; }
+        }
         // Constructor
         public Map(int posX, int posY, int width, int height)
         {
             this.posX = posX;
             this.posY = posY;
+            this.width = width;
+            this.height = height;
             tiles = new Tile[width, height];
             // Set position of all tiles in grid
             for (int i = 0; i < height; i++)
@@ -42,10 +54,8 @@ namespace Battleships
                     tiles[j, i].SetCharacter(posX + j, posY + i, ' ');
                 }
             }
-            GetVerticalLetter(this.posX - 1, this.posY, height);
-            GetHorizontalDigits(this.posX, this.posY - 1, width);
         }
-        public void GetVerticalLetter(int posX, int posY, int length)
+        public void DrawVerticalLetter(int posX, int posY, int length)
         {
             Char c = 'A';
             for (int i = 0; i < length; i++ )
@@ -55,13 +65,32 @@ namespace Battleships
                 c++;
             }
         }
-        public void GetHorizontalDigits(int posX, int posY, int length)
+        public void DrawHorizontalDigits(int posX, int posY, int length)
         {
             Console.SetCursorPosition(posX, posY);
             for (int i = 1; i < length + 1; i++)
             {
                 Console.Write("(" + i.ToString() + ")");
             }
+        }
+        public void Draw()
+        {
+            DrawVerticalLetter(posX - 1, posY, height);
+            DrawHorizontalDigits(posX, posY - 1, width);
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    tiles[j, i].SetCharacter(posX + j, posY + i, ' ');
+                }
+            }
+        }
+        public void MarkTile(int posX, int posY, ConsoleColor col)
+        {
+            Console.SetCursorPosition(this.posX + posX, this.posY + posY);
+            Console.BackgroundColor = col;
+            Console.Write(" ");
+            Console.BackgroundColor = ConsoleColor.Black;
         }
     }
 }
