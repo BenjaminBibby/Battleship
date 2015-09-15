@@ -16,34 +16,53 @@ namespace BattleshipServer
         private static bool done = false;
         private static string udpIP;
         private static bool isRunning;
+        private static bool dataReceived;
+        private static SortedList<IPEndPoint, StreamWriter> msgs = new SortedList<IPEndPoint, StreamWriter>();
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
+        private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
         private static object connectedUsersLock = new object();
         static void Main(string[] args)
         {
             Console.Title = "Server";
             Thread UDPthread = new Thread(UDPServer);
             UDPthread.Start();
-            TcpServer(port);
-            TCPClient();
-            UDPServer();
+            Thread TCPthread = new Thread(TcpServer);
+            TCPthread.Start();
+            Thread TCPclientThread = new Thread(TCPClient);
+            TCPclientThread.Start();
+            MatchMaking();
 
             Console.ReadLine();
         }
-        static void TcpServer(int port)
+
+
+        static void MatchMaking()
+        {
+            while (true)
+            {
+                if (connectedUsers.Count >= 2)
+                {
+                    matchedUsers.Add(connectedUsers[0]);
+                    Console.WriteLine("Added user: {0}", connectedUsers[0]);
+                    matchedUsers.Add(connectedUsers[1]);
+                    Console.WriteLine("Added user: {0}", connectedUsers[1]);
+                    connectedUsers.RemoveRange(0, 2);
+                }   
+            }
+        }
+        static void TcpServer()
         {
             server = new TcpListener(IPAddress.Any, port);
             server.Start();
             isRunning = true;
             LoopClient();
         }
-
         public static void LoopClient()
         {
             while (isRunning)
             {
                 IPAddress localAddress = IPAddress.Parse("10.131.74.125");
-                int port = 11000;
                 Byte[] bytes = new Byte[256];
                 string data = null;
                 TcpClient newClient = server.AcceptTcpClient();
@@ -51,7 +70,6 @@ namespace BattleshipServer
                 t.Start(newClient);
             }
         }
-
         public static void HandleClient(object obj)
         {
             TcpClient client = (TcpClient)obj;
@@ -67,13 +85,15 @@ namespace BattleshipServer
                 connectedUsers.Add(endPoint);
             }
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
-
+            msgs.Add(endPoint,sWriter);
             while (client.Connected)
             {
                 try
                 {                   
                     sData = sReader.ReadLine();
+                    dataReceived = true;
                     Console.WriteLine(sData);
+
                 }
                 catch (Exception)
                 {
@@ -83,6 +103,7 @@ namespace BattleshipServer
                     {
                         connectedUsers.Remove(endPoint);
                     } 
+
                     Console.WriteLine("Connected users: {0}", connectedUsers.Count);
                     Thread.CurrentThread.Abort();
                 }
@@ -90,6 +111,18 @@ namespace BattleshipServer
                 sWriter.WriteLine("Server received your message!");
                 sWriter.Flush();
 
+                if (matchedUsers.Count >= 2)
+                {
+                    try
+                    {
+                        IPEndPoint tmpLocateUser = LocateUser();
+                        msgs[tmpLocateUser].WriteLine(sData);
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
             }
         }
         static void TCPClient()
@@ -109,6 +142,7 @@ namespace BattleshipServer
                         Console.WriteLine("Message sent: {0}", msg);
                         data = new byte[256];
                         string responseString = string.Empty;
+
                         //int bytes = stream.Read(data, 0, data.Length);
                         //responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
                         stream.Close();
@@ -117,10 +151,28 @@ namespace BattleshipServer
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("TCP Client: " + e.Message);
+                        //Console.WriteLine("TCP Client: " + e.Message);
                     }     
                 }
             }
+        }
+        static IPEndPoint LocateUser()
+        {
+            for (int i = 0; i < matchedUsers.Count; i++)
+            {
+                if(matchedUsers[i].Address.ToString() == udpIP)
+                {
+                    if(i%2 == 0)
+                    {
+                        return matchedUsers[i + 1];
+                    }
+                    else
+                    {
+                        return matchedUsers[i - 1];
+                    }
+                }
+            }
+            return matchedUsers[0];
         }
         static void UDPServer()
         {
