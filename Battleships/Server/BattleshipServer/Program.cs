@@ -17,14 +17,18 @@ namespace BattleshipServer
         private static string udpIP;
         private static bool isRunning;
         private static bool dataReceived;
-        private static SortedList<IPEndPoint, StreamWriter> msgs = new SortedList<IPEndPoint, StreamWriter>();
+        private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
+        private static Dictionary<StreamWriter, string> msgs = new Dictionary<StreamWriter, string>();
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
         private static object connectedUsersLock = new object();
+        private static object msgsLock = new object();
         static void Main(string[] args)
         {
             Console.Title = "Server";
+            Thread MasterSenderThread = new Thread(MasterSender);
+            MasterSenderThread.Start();
             Thread UDPthread = new Thread(UDPServer);
             UDPthread.Start();
             Thread TCPthread = new Thread(TcpServer);
@@ -85,7 +89,7 @@ namespace BattleshipServer
                 connectedUsers.Add(endPoint);
             }
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
-            msgs.Add(endPoint,sWriter);
+            infoSender.Add(endPoint,sWriter);
             while (client.Connected)
             {
                 try
@@ -102,6 +106,8 @@ namespace BattleshipServer
                     lock (connectedUsersLock)
                     {
                         connectedUsers.Remove(endPoint);
+                        infoSender.Remove(endPoint);
+                        matchedUsers.Remove(endPoint);
                     } 
 
                     Console.WriteLine("Connected users: {0}", connectedUsers.Count);
@@ -116,7 +122,11 @@ namespace BattleshipServer
                     try
                     {
                         IPEndPoint tmpLocateUser = LocateUser();
-                        msgs[tmpLocateUser].WriteLine(sData);
+                        lock (msgsLock)
+                        {
+                            msgs.Add(infoSender[tmpLocateUser], sData);
+                        }
+                        
                     }
                     catch(Exception e)
                     {
@@ -124,6 +134,35 @@ namespace BattleshipServer
                     }
                 }
             }
+        }
+        private static void MasterSender()
+        {
+            Dictionary<StreamWriter, string> tmp = new Dictionary<StreamWriter, string>();
+            while (true)
+            {
+                lock (msgsLock)
+                {
+                    foreach (var item in msgs.Keys)
+                    {
+                        tmp.Add(item, msgs[item]);
+                    }
+                }
+
+                foreach (var key in tmp.Keys)
+                {
+                    key.WriteLine(tmp[key]);
+                    key.Flush();
+                    lock (msgsLock)
+                    {
+                        msgs.Remove(key);
+
+                    }
+                }
+                tmp.Clear();
+
+   
+            }
+
         }
         static void TCPClient()
         {

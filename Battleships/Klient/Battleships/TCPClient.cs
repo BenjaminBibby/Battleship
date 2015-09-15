@@ -24,7 +24,6 @@ namespace Battleships
             _client.Connect(ipAddress, portNum);
             HandleCommunication();
         }
-        
         public void HandleCommunication()
         {
             _sWriter = new StreamWriter(_client.GetStream(), Encoding.ASCII);
