@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Threading;
 
 namespace Battleships
 {
@@ -23,24 +24,42 @@ namespace Battleships
             _client.Connect(ipAddress, portNum);
             HandleCommunication();
         }
-        
-
         public void HandleCommunication()
         {
             _sWriter = new StreamWriter(_client.GetStream(), Encoding.ASCII);
-            _sReader = new StreamReader(_client.GetStream(), Encoding.ASCII);
             _isConnected = true;
             string sData = null;
             string incomingData = null;
+            Thread readThread = new Thread(Read);
+            readThread.Start();
+
             while (_isConnected)
             {
                 Console.Write(">");
                 sData = Console.ReadLine();
                 _sWriter.WriteLine(sData);
-                _sWriter.Flush();
 
+                try
+                {
+                    _sWriter.Flush();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);   
+                }
+            }
+        }
+
+        public void Read()
+        {
+            string incomingData = null;
+
+            _sReader = new StreamReader(_client.GetStream(), Encoding.ASCII);
+
+            while (_isConnected)
+            {
                 incomingData = _sReader.ReadLine();
-                Console.WriteLine("Server: " + incomingData);
+                Console.WriteLine("Server> {0}", incomingData);
             }
         }
     }
