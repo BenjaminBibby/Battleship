@@ -43,7 +43,6 @@ namespace BattleshipServer
             while (isRunning)
             {
                 IPAddress localAddress = IPAddress.Parse("10.131.74.125");
-                int port = 11000;
                 Byte[] bytes = new Byte[256];
                 string data = null;
                 TcpClient newClient = server.AcceptTcpClient();
