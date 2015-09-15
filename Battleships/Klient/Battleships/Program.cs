@@ -11,13 +11,15 @@ namespace Battleships
 {
     class Program
     {
+        private static string udpIP;
         static void Main(string[] args)
         {
+            Map map = new Map(1, 1, 10, 10);
+            Console.ReadLine();
             Console.Title = "Client";
             UDPClient();
             TCPServer();
-            TCPClient c = new TCPClient("127.0.0.1", 11000);
-            
+            TCPClient c = new TCPClient(udpIP, 11000);
             Console.ReadLine();
         }
 
@@ -39,6 +41,7 @@ namespace Battleships
                     TcpClient client = server.AcceptTcpClient(); //Three way handshake
                     Console.WriteLine("Connection established\nIP: {0}", client.Client.RemoteEndPoint.ToString());
                     IPAddress.Parse((IPEndPoint)(Client.RemoteEndPoint).AddressFamily)
+                    udpIP = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
                     data = null;
                     NetworkStream stream = client.GetStream();
                     int i = 0;
