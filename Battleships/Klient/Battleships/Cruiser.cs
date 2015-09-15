@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Battleships
 {
-    class Battleship : Ship
+    class Cruiser : Ship
     {
-        public Battleship(int posX, int posY, int size, bool horizontal)
-            : base(posX, posY, 5, horizontal)
+        public Cruiser(int posX, int posY, int size, bool horizontal)
+            : base(posX, posY, 4, horizontal)
         { 
             
         }
