@@ -17,6 +17,7 @@ namespace BattleshipServer
         private static string udpIP;
         private static bool isRunning;
         private static bool dataReceived;
+        private static SortedList<IPEndPoint, StreamWriter> msgs = new SortedList<IPEndPoint, StreamWriter>();
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
@@ -84,7 +85,7 @@ namespace BattleshipServer
                 connectedUsers.Add(endPoint);
             }
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
-
+            msgs.Add(endPoint,sWriter);
             while (client.Connected)
             {
                 try
@@ -114,7 +115,8 @@ namespace BattleshipServer
                 {
                     try
                     {
-                        server.Server.SendTo(Encoding.ASCII.GetBytes(sData), new IPEndPoint(LocateUser(), port));
+                        IPEndPoint tmpLocateUser = LocateUser();
+                        msgs[tmpLocateUser].WriteLine(sData);
                     }
                     catch(Exception e)
                     {
@@ -123,7 +125,6 @@ namespace BattleshipServer
                 }
             }
         }
-        
         static void TCPClient()
         {
             string msg = "Connected!";
@@ -155,7 +156,7 @@ namespace BattleshipServer
                 }
             }
         }
-        static IPAddress LocateUser()
+        static IPEndPoint LocateUser()
         {
             for (int i = 0; i < matchedUsers.Count; i++)
             {
@@ -163,15 +164,15 @@ namespace BattleshipServer
                 {
                     if(i%2 == 0)
                     {
-                        return matchedUsers[i + 1].Address;
+                        return matchedUsers[i + 1];
                     }
                     else
                     {
-                        return matchedUsers[i - 1].Address;
+                        return matchedUsers[i - 1];
                     }
                 }
             }
-            return matchedUsers[0].Address;
+            return matchedUsers[0];
         }
         static void UDPServer()
         {
