@@ -35,7 +35,7 @@ namespace Battleships
             readThread.Start();
 
             while (_isConnected)
-            {
+            {   
                 Console.Write(">");
                 sData = Console.ReadLine();
                 _sWriter.WriteLine(sData);
