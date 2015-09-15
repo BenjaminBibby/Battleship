@@ -33,13 +33,12 @@ namespace Battleships
                 string data = null;
 
                 server.Start();
-                //Console.WriteLine("Type 's' to start the TCPServer");
                 
                     Console.WriteLine("Waiting..");
 
                     TcpClient client = server.AcceptTcpClient(); //Three way handshake
                     Console.WriteLine("Connection established\nIP: {0}", client.Client.RemoteEndPoint.ToString());
-
+                    IPAddress.Parse((IPEndPoint)(Client.RemoteEndPoint).AddressFamily)
                     data = null;
                     NetworkStream stream = client.GetStream();
                     int i = 0;
@@ -63,6 +62,7 @@ namespace Battleships
             {
                 Console.WriteLine("SocketException: {0}", e);
             }
+
             finally
             {
                 server.Stop();
@@ -100,12 +100,7 @@ namespace Battleships
                 broadcastIp += ip[i] + ".";
 			}
 
-            broadcastIp += "255";
-            Console.WriteLine(broadcastIp);
-            
-            //string broadcastIp = GetLocalIPAddress().Substring(9);
-            //broadcastIp = GetLocalIPAddress().Replace(broadcastIp, ".255");
-
+            broadcastIp += "255";            
             return broadcastIp;
         }
 
