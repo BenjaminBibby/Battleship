@@ -47,11 +47,14 @@ namespace BattleshipServer
             {
                 if (connectedUsers.Count >= 2)
                 {
-                    matchedUsers.Add(connectedUsers[0]);
-                    Console.WriteLine("Added user: {0}", connectedUsers[0]);
-                    matchedUsers.Add(connectedUsers[1]);
-                    Console.WriteLine("Added user: {0}", connectedUsers[1]);
-                    connectedUsers.RemoveRange(0, 2);
+                    lock(connectedUsersLock)
+                    {
+                        matchedUsers.Add(connectedUsers[0]);
+                        Console.WriteLine("Added user: {0}", connectedUsers[0]);
+                        matchedUsers.Add(connectedUsers[1]);
+                        Console.WriteLine("Added user: {0}", connectedUsers[1]);
+                        connectedUsers.RemoveRange(0, 2);
+                    }
                 }   
             }
         }
@@ -108,7 +111,9 @@ namespace BattleshipServer
                         if(matchedUsers.Contains(endPoint))
                         {
                             matchedUsers.Remove(LocateUser(endPoint));
+                            connectedUsers.Add(LocateUser(endPoint));
                         }
+
                         connectedUsers.Remove(endPoint);
                         infoSender.Remove(endPoint);
                         matchedUsers.Remove(endPoint);
@@ -121,7 +126,7 @@ namespace BattleshipServer
                 sWriter.WriteLine("Server received your message!");
                 sWriter.Flush();
 
-                if (matchedUsers.Count >= 2)
+                if (matchedUsers.Contains(endPoint))
                 {
                     try
                     {
@@ -201,21 +206,24 @@ namespace BattleshipServer
         }
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
-            for (int i = 0; i < matchedUsers.Count; i++)
+            lock(connectedUsersLock)
             {
-                if(matchedUsers[i] == locateUserEP)
+                for (int i = 0; i < matchedUsers.Count; i++)
                 {
-                    if(i%2 == 0)
+                    if (matchedUsers[i] == locateUserEP)
                     {
-                        return matchedUsers[i + 1];
-                    }
-                    else if(i%2 == 1)
-                    {
-                        return matchedUsers[i - 1];
+                        if (i % 2 == 0)
+                        {
+                            return matchedUsers[i + 1];
+                        }
+                        else if (i % 2 == 1)
+                        {
+                            return matchedUsers[i - 1];
+                        }
                     }
                 }
+                return matchedUsers[0];
             }
-           return matchedUsers[0];
         }
         static void UDPServer()
         {
