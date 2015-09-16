@@ -86,10 +86,23 @@ namespace BattleshipServer
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
+
+            lock(connectedUsersLock)
             lock (connectedUsersLock)
             {
                 connectedUsers.Add(endPoint);
             }
+
+            sWriter.Write("Enter username: ");
+            sWriter.Flush();
+
+            string username = sReader.ReadLine();
+
+            lock(usernameLock)
+            {               
+                usernames.Add(endPoint, username);
+            }
+
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
             infoSender.Add(endPoint, sWriter);
             while (client.Connected)
@@ -126,8 +139,13 @@ namespace BattleshipServer
                     {
                         if(matchedUsers.Contains(endPoint))
                         {
-                            matchedUsers.Remove(LocateUser(endPoint));
                             connectedUsers.Add(LocateUser(endPoint));
+                            matchedUsers.Remove(LocateUser(endPoint));
+                        }
+
+                        lock(usernameLock)
+                        {
+                            usernames.Remove(endPoint);
                         }
 
                         connectedUsers.Remove(endPoint);
@@ -152,7 +170,7 @@ namespace BattleshipServer
                         IPEndPoint tmpLocateUser = LocateUser(endPoint);
                         lock (msgsLock)
                         {
-                            msgs.Add(infoSender[tmpLocateUser], sData);
+                            msgs.Add(infoSender[tmpLocateUser], usernames[endPoint] + "> " + sData);
                         }
 
                     }
@@ -185,12 +203,36 @@ namespace BattleshipServer
                         msgs.Remove(key);
                     }
                 }
+                tmp.Clear();   
                 tmp.Clear();
             }
-
         }
         static void TCPClient()
         {
+            string msg = "Connected!";
+            
+            if (udpIP != null)
+            {
+                try
+                {
+                    TcpClient client = new TcpClient(udpIP, port);
+                    byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                    NetworkStream stream = client.GetStream();
+                    stream.Write(data, 0, data.Length);
+                    Console.WriteLine("Message sent: {0}", msg);
+                    data = new byte[256];
+                    string responseString = string.Empty;
+
+                    //int bytes = stream.Read(data, 0, data.Length);
+                    //responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                    stream.Close();
+                    client.Close();
+                    Thread.CurrentThread.Abort();
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine("TCP Client: " + e.Message);
+                }     
             string msg = "Connected";
 
             while (true)
@@ -236,6 +278,13 @@ namespace BattleshipServer
                         //lock(connectedUsersLock)
                         //{
                         for (int b = 0; b < matchedUsers.Count; b++)
+            //lock(connectedUsersLock)
+            //{
+                for (int i = 0; i < matchedUsers.Count; i++)
+                {
+                    if (matchedUsers[i] == locateUserEP && matchedUsers.Count >= 2)
+                    {
+                        if (i % 2 == 0)
                         {
                             if (matchedUsers[b] == locateUserEP)
                             {

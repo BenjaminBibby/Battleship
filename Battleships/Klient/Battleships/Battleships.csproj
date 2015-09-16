@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Battleship.cs" />
+    <Compile Include="CipherUtility.cs" />
     <Compile Include="Cruiser.cs" />
     <Compile Include="Frigate.cs" />
     <Compile Include="Map.cs" />
