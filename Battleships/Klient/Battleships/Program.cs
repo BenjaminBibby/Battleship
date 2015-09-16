@@ -16,7 +16,7 @@ namespace Battleships
             Console.Title = "Client";
             UDPClient();
             TCPServer();
-            TCPClient c = new TCPClient("127.0.0.1", 11000);
+            TCPClient c = new TCPClient("10.131.165.2", 11000);
             
             Console.ReadLine();
         }
@@ -27,7 +27,7 @@ namespace Battleships
             try
             {
                 int port = 11000;
-                IPAddress localAddress = IPAddress.Parse(GetLocalIPAddress());
+                IPAddress localAddress = IPAddress.Parse("10.131.165.2");
                 server = new TcpListener(localAddress, port);
                 Byte[] bytes = new Byte[256];
                 string data = null;
