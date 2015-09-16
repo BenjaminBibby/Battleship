@@ -10,17 +10,19 @@ namespace Battleships
     {
         class Tile
         {
-            private ConsoleColor col = ConsoleColor.Blue;
             private char sprite;
-            private bool occupied;
+            public bool occupied = false;
+            public Ship occupiedShip;
             public int posX, posY;
-            public void SetCharacter(int x, int y, char c)
+            public void SetCharacter(char c, ConsoleColor col)
             {
                 sprite = c;
                 Console.BackgroundColor = col;  // Set background color to blue
-                Console.SetCursorPosition(x, y);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.SetCursorPosition(posX, posY);
                 Console.Write(c);
                 Console.BackgroundColor = ConsoleColor.Black;   // Reset background color to black
+                Console.ForegroundColor = ConsoleColor.White;
             }
         }
         private Tile[,] tiles;
@@ -28,12 +30,22 @@ namespace Battleships
         public int PosX
         {
             get { return posX; }
-            set { value = posX; }
+            set { posX = value; }
         }
         public int PosY
         { 
             get { return posY; }
-            set { value = posY; }
+            set { posY = value; }
+        }
+        public int Width
+        {
+            get { return width; }
+            set { width = value; }
+        }
+        public int Height
+        {
+            get { return height; }
+            set { height = value; }
         }
         // Constructor
         public Map(int posX, int posY, int width, int height)
@@ -51,7 +63,6 @@ namespace Battleships
                     tiles[j, i] = new Tile();
                     tiles[j, i].posX = (posX + j);
                     tiles[j, i].posY = (posY + i);
-                    tiles[j, i].SetCharacter(posX + j, posY + i, ' ');
                 }
             }
         }
@@ -61,7 +72,7 @@ namespace Battleships
             for (int i = 0; i < length; i++ )
             {
                 Console.SetCursorPosition(posX, posY + i);
-                Console.Write("(" + c +")");
+                Console.Write(c);
                 c++;
             }
         }
@@ -70,7 +81,7 @@ namespace Battleships
             Console.SetCursorPosition(posX, posY);
             for (int i = 1; i < length + 1; i++)
             {
-                Console.Write("(" + i.ToString() + ")");
+                Console.Write(i.ToString());
             }
         }
         public void Draw()
@@ -81,16 +92,22 @@ namespace Battleships
             {
                 for (int j = 0; j < width; j++)
                 {
-                    tiles[j, i].SetCharacter(posX + j, posY + i, ' ');
+                    tiles[j, i].SetCharacter(' ', ConsoleColor.Blue);
                 }
             }
         }
-        public void MarkTile(int posX, int posY, ConsoleColor col)
+        public void MarkTile(int posX, int posY, char c, ConsoleColor col)
         {
-            Console.SetCursorPosition(this.posX + posX, this.posY + posY);
-            Console.BackgroundColor = col;
-            Console.Write(" ");
-            Console.BackgroundColor = ConsoleColor.Black;
+            tiles[posX, posY].SetCharacter(c, col);
+        }
+        public void OccupyTile(int posX, int posY, Ship ship)
+        {
+            tiles[posX, posY].occupied = true;
+            tiles[posX, posY].occupiedShip = ship;
+        }
+        public bool CheckTile(int posX, int posY)
+        {
+            return tiles[posX, posY].occupied;
         }
     }
 }
