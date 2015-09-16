@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace Battleships
 {
@@ -27,15 +28,15 @@ namespace Battleships
             HandleCommunication();
             
         }
-        
-
         public void HandleCommunication()
         {
             _sWriter = new StreamWriter(_client.GetStream(), Encoding.ASCII);
             _sReader = new StreamReader(_client.GetStream(), Encoding.UTF8);
             _isConnected = true;
             string sData = null;
-            string incomingData = null;
+            Thread readThread = new Thread(Read);
+            readThread.Start();
+
             while (_isConnected)
             {
                 string md5Encrypt = CipherUtility.Encrypt<AesManaged>(sha256Calc, "password", "salt");
@@ -54,6 +55,40 @@ namespace Battleships
                 Console.WriteLine("Data recieved "+ incomingData);
                 string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
                 Console.WriteLine("Server: " + decrypted);
+            {   
+                Console.Write(">");
+                sData = Console.ReadLine();
+                _sWriter.WriteLine(sData);
+
+                try
+                {
+                    _sWriter.Flush();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);   
+                }
+            }
+        }
+
+        public void Read()
+        {
+            string incomingData = null;
+
+            _sReader = new StreamReader(_client.GetStream(), Encoding.ASCII);
+
+            while (_isConnected)
+            {
+                try
+                {
+                    incomingData = _sReader.ReadLine();
+                    Console.WriteLine("Server> {0}", incomingData);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.ReadLine();
+                }
             }
         }
 

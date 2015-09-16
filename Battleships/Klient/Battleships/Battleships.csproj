@@ -43,9 +43,13 @@
   <ItemGroup>
     <Compile Include="Battleship.cs" />
     <Compile Include="CipherUtility.cs" />
+    <Compile Include="Cruiser.cs" />
+    <Compile Include="Frigate.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="Minesweeper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ship.cs" />
     <Compile Include="TCPClient.cs" />
   </ItemGroup>
   <ItemGroup>
