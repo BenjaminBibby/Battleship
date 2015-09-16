@@ -20,8 +20,7 @@ namespace Battleships
             UDPClient();
             TCPServer();
             TCPClient c = new TCPClient("10.131.165.2", 11000);
-            
-            TCPClient c = new TCPClient(udpIP, 11000);
+          //  TCPClient c = new TCPClient(udpIP, 11000);
             Console.ReadLine();
         }
 
