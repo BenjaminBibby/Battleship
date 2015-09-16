@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace BattleshipServer
 {
@@ -17,6 +18,7 @@ namespace BattleshipServer
         private static string udpIP;
         private static bool isRunning;
         private static bool dataReceived;
+        private static string sData;
         private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
         private static Dictionary<StreamWriter, string> msgs = new Dictionary<StreamWriter, string>();
         private static TcpListener server;
@@ -24,6 +26,7 @@ namespace BattleshipServer
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
         private static object connectedUsersLock = new object();
         private static object msgsLock = new object();
+        private static TcpClient client;
         static void Main(string[] args)
         {
             Console.Title = "Server";
@@ -40,7 +43,6 @@ namespace BattleshipServer
             Console.ReadLine();
         }
 
-
         static void MatchMaking()
         {
             while (true)
@@ -52,7 +54,7 @@ namespace BattleshipServer
                     matchedUsers.Add(connectedUsers[1]);
                     Console.WriteLine("Added user: {0}", connectedUsers[1]);
                     connectedUsers.RemoveRange(0, 2);
-                }   
+                }
             }
         }
         static void TcpServer()
@@ -66,9 +68,9 @@ namespace BattleshipServer
         {
             while (isRunning)
             {
-                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
+                IPAddress localAddress = IPAddress.Parse("10.0.0.202");
                 Byte[] bytes = new Byte[256];
-                string data = null;
+               // string data = null;
                 TcpClient newClient = server.AcceptTcpClient();
                 Thread t = new Thread(new ParameterizedThreadStart(HandleClient));
                 t.Start(newClient);
@@ -79,28 +81,45 @@ namespace BattleshipServer
             TcpClient client = (TcpClient)obj;
             StreamReader sReader = new StreamReader(client.GetStream(), Encoding.ASCII);
             StreamWriter sWriter = new StreamWriter(client.GetStream(), Encoding.ASCII);
-
             string sData = null;
+            
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
-            lock(connectedUsersLock)
+            lock (connectedUsersLock)
             {
                 connectedUsers.Add(endPoint);
             }
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
-            infoSender.Add(endPoint,sWriter);
+            infoSender.Add(endPoint, sWriter);
             while (client.Connected)
             {
                 try
-                {                   
+                {
                     sData = sReader.ReadLine();
-                    dataReceived = true;
-                    Console.WriteLine(sData);
+                 //   Console.WriteLine("Encrypted data recieved: " + sData);
+                    string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                   /* if (!dataReceived)
+                    {
+                        if (decrypted != "f4cefed49fb2f58655cde4c216f4e52a1f2aaaea0b5809664a97f075026f92bc")
+                        {
+                            dataReceived = true;
+                            Console.WriteLine("Client doesnt have the right MD5!");
+                            string errorOne = "Your MD5 is not RIGHT!, disconnecting.";
+                            string MD5Error = CipherUtility.Encrypt<AesManaged>(errorOne, "password", "salt");
+                            sWriter.WriteLine(MD5Error);
+                            sWriter.Flush();
+                            client.Close();
+                            break;
+                        }
+                    }
+                    */
+                    Console.WriteLine("Data recieved and decrypted: " + decrypted);
 
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine(e.Message);
                     Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
 
                     lock (connectedUsersLock)
@@ -108,13 +127,16 @@ namespace BattleshipServer
                         connectedUsers.Remove(endPoint);
                         infoSender.Remove(endPoint);
                         matchedUsers.Remove(endPoint);
-                    } 
+                    }
 
                     Console.WriteLine("Connected users: {0}", connectedUsers.Count);
                     Thread.CurrentThread.Abort();
                 }
                 //You could write something back to the client here.
-                sWriter.WriteLine("Server received your message!");
+                string msg = "hej";
+                string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
+                Console.WriteLine("Encrypted data sent: " + encrypted);
+                sWriter.WriteLine(encrypted);
                 sWriter.Flush();
 
                 if (matchedUsers.Count >= 2)
@@ -126,9 +148,9 @@ namespace BattleshipServer
                         {
                             msgs.Add(infoSender[tmpLocateUser], sData);
                         }
-                        
+
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         Console.WriteLine(e.Message);
                     }
@@ -155,19 +177,16 @@ namespace BattleshipServer
                     lock (msgsLock)
                     {
                         msgs.Remove(key);
-
                     }
                 }
                 tmp.Clear();
-
-   
             }
 
         }
         static void TCPClient()
         {
-            string msg = "Connected!";
-            
+            string msg = "Connected";
+
             while (true)
             {
                 if (udpIP != null)
@@ -188,10 +207,10 @@ namespace BattleshipServer
                         client.Close();
                         Thread.CurrentThread.Abort();
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         //Console.WriteLine("TCP Client: " + e.Message);
-                    }     
+                    }
                 }
             }
         }
@@ -199,9 +218,9 @@ namespace BattleshipServer
         {
             for (int i = 0; i < matchedUsers.Count; i++)
             {
-                if(matchedUsers[i].Address.ToString() == udpIP)
+                if (matchedUsers[i].Address.ToString() == udpIP)
                 {
-                    if(i%2 == 0)
+                    if (i % 2 == 0)
                     {
                         return matchedUsers[i + 1];
                     }
