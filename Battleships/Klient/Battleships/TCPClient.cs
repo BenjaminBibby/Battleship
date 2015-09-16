@@ -19,6 +19,7 @@ namespace Battleships
         private bool _isConnected;
         private StreamReader _sReader;
         private static string sha256Calc;
+        private string incomingData = null;
 
         public TCPClient(string ipAddress, int portNum)
         {
@@ -39,34 +40,33 @@ namespace Battleships
 
             while (_isConnected)
             {
-                string md5Encrypt = CipherUtility.Encrypt<AesManaged>(sha256Calc, "password", "salt");
+               /* string md5Encrypt = CipherUtility.Encrypt<AesManaged>(sha256Calc, "password", "salt");
                 _sWriter.WriteLine(md5Encrypt);
-                _sWriter.Flush();
+                _sWriter.Flush();*/
 
                 Console.Write(">");
                 sData = Console.ReadLine();
                 string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
-                Console.WriteLine("encrypted data " + encrypted);
+                //Console.WriteLine("encrypted data " + encrypted);
                 _sWriter.WriteLine(encrypted);
                 _sWriter.Flush();
 
-                incomingData = _sReader.ReadLine();
-
-                Console.WriteLine("Data recieved "+ incomingData);
-                string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
-                Console.WriteLine("Server: " + decrypted);
-            {   
-                Console.Write(">");
-                sData = Console.ReadLine();
-                _sWriter.WriteLine(sData);
-
-                try
+                Console.WriteLine("Data recieved " + incomingData);
+         
                 {
-                    _sWriter.Flush();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);   
+                    Console.Write(">");
+                    sData = Console.ReadLine();
+                    string encrypted2 = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+                    _sWriter.WriteLine(encrypted2);
+
+                    try
+                    {
+                        _sWriter.Flush();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
             }
         }
@@ -82,7 +82,8 @@ namespace Battleships
                 try
                 {
                     incomingData = _sReader.ReadLine();
-                    Console.WriteLine("Server> {0}", incomingData);
+                    string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
+                    Console.WriteLine("Server> {0}", decrypted);
                 }
                 catch (Exception e)
                 {
