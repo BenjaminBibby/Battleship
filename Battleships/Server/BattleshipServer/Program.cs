@@ -86,10 +86,23 @@ namespace BattleshipServer
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
+
+            lock(connectedUsersLock)
             lock (connectedUsersLock)
             {
                 connectedUsers.Add(endPoint);
             }
+
+            sWriter.Write("Enter username: ");
+            sWriter.Flush();
+
+            string username = sReader.ReadLine();
+
+            lock(usernameLock)
+            {               
+                usernames.Add(endPoint, username);
+            }
+
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
             infoSender.Add(endPoint, sWriter);
             while (client.Connected)
@@ -97,7 +110,7 @@ namespace BattleshipServer
                 try
                 {
                     sData = sReader.ReadLine();
-                 //   Console.WriteLine("Encrypted data recieved: " + sData);
+                  //  Console.WriteLine("Encrypted data recieved: " + sData);
                     string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                    /* if (!dataReceived)
                     {
@@ -126,8 +139,13 @@ namespace BattleshipServer
                     {
                         if(matchedUsers.Contains(endPoint))
                         {
-                            matchedUsers.Remove(LocateUser(endPoint));
                             connectedUsers.Add(LocateUser(endPoint));
+                            matchedUsers.Remove(LocateUser(endPoint));
+                        }
+
+                        lock(usernameLock)
+                        {
+                            usernames.Remove(endPoint);
                         }
 
                         connectedUsers.Remove(endPoint);
@@ -141,7 +159,7 @@ namespace BattleshipServer
                 //You could write something back to the client here.
                 string msg = "hej";
                 string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
-                Console.WriteLine("Encrypted data sent: " + encrypted);
+                //Console.WriteLine("Encrypted data sent: " + encrypted);
                 sWriter.WriteLine(encrypted);
                 sWriter.Flush();
 
@@ -152,7 +170,7 @@ namespace BattleshipServer
                         IPEndPoint tmpLocateUser = LocateUser(endPoint);
                         lock (msgsLock)
                         {
-                            msgs.Add(infoSender[tmpLocateUser], sData);
+                            msgs.Add(infoSender[tmpLocateUser], usernames[endPoint] + "> " + sData);
                         }
 
                     }
@@ -185,17 +203,40 @@ namespace BattleshipServer
                         msgs.Remove(key);
                     }
                 }
+                tmp.Clear();   
                 tmp.Clear();
             }
-
         }
         static void TCPClient()
         {
+            string msg = "Connected!";
+            
+            if (udpIP != null)
+            {
+                try
+                {
+                    TcpClient client = new TcpClient(udpIP, port);
+                    byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
+                    NetworkStream stream = client.GetStream();
+                    stream.Write(data, 0, data.Length);
+                    Console.WriteLine("Message sent: {0}", msg);
+                    data = new byte[256];
+                    string responseString = string.Empty;
+
+                    //int bytes = stream.Read(data, 0, data.Length);
+                    //responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                    stream.Close();
+                    client.Close();
+                    Thread.CurrentThread.Abort();
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine("TCP Client: " + e.Message);
+                }     
             string msg = "Connected";
 
             while (true)
             {
-            string msg = "Connected!";
                 if (udpIP != null)
                 {
                     try
@@ -222,7 +263,7 @@ namespace BattleshipServer
                     }     
                 
             }
-        }
+        
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
             for (int i = 0; i < matchedUsers.Count; i++)
@@ -234,25 +275,37 @@ namespace BattleshipServer
                         return matchedUsers[i + 1];
                     }
                     else
+                        //lock(connectedUsersLock)
+                        //{
+                        for (int b = 0; b < matchedUsers.Count; b++)
             //lock(connectedUsersLock)
             //{
                 for (int i = 0; i < matchedUsers.Count; i++)
                 {
-                    if (matchedUsers[i] == locateUserEP)
+                    if (matchedUsers[i] == locateUserEP && matchedUsers.Count >= 2)
                     {
                         if (i % 2 == 0)
                         {
-                            return matchedUsers[i + 1];
+                            if (matchedUsers[b] == locateUserEP)
+                            {
+                                if (b % 2 == 0)
+                                {
+                                    return matchedUsers[b + 1];
+                                }
+                                else if (b % 2 == 1)
+                                {
+                                    return matchedUsers[b - 1];
+                                }
+                            }
                         }
-                        else if (i % 2 == 1)
-                        {
-                            return matchedUsers[i - 1];
-                        }
-                    }
                 }
+            }
                 return matchedUsers[0];
-           // }
-        }
+            }
+            
+            
+        
+            
         static void UDPServer()
         {
             UdpClient listener = new UdpClient(port);
@@ -282,3 +335,4 @@ namespace BattleshipServer
         }
     }
 }
+

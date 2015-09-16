@@ -84,6 +84,7 @@ namespace Battleships
                     incomingData = _sReader.ReadLine();
                     string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
                     Console.WriteLine("Server> {0}", decrypted);
+                    Console.WriteLine(incomingData);
                 }
                 catch (Exception e)
                 {
