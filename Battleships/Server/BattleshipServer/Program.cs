@@ -125,7 +125,7 @@ namespace BattleshipServer
                 {
                     try
                     {
-                        IPEndPoint tmpLocateUser = LocateUser();
+                        IPEndPoint tmpLocateUser = LocateUser(endPoint);
                         lock (msgsLock)
                         {
                             msgs.Add(infoSender[tmpLocateUser], sData);
@@ -199,23 +199,23 @@ namespace BattleshipServer
                 }
             }
         }
-        static IPEndPoint LocateUser()
+        static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
             for (int i = 0; i < matchedUsers.Count; i++)
             {
-                if(matchedUsers[i].Address.ToString() == udpIP)
+                if(matchedUsers[i] == locateUserEP)
                 {
                     if(i%2 == 0)
                     {
                         return matchedUsers[i + 1];
                     }
-                    else
+                    else if(i%2 == 1)
                     {
                         return matchedUsers[i - 1];
                     }
                 }
             }
-            return matchedUsers[0];
+           return matchedUsers[0];
         }
         static void UDPServer()
         {
