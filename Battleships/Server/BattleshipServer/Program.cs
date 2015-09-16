@@ -69,7 +69,6 @@ namespace BattleshipServer
         {
             while (isRunning)
             {
-                IPAddress localAddress = IPAddress.Parse("10.131.74.125");
                 Byte[] bytes = new Byte[256];
                 string data = null;
                 TcpClient newClient = server.AcceptTcpClient();
@@ -206,8 +205,8 @@ namespace BattleshipServer
         }
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
-            lock(connectedUsersLock)
-            {
+            //lock(connectedUsersLock)
+            //{
                 for (int i = 0; i < matchedUsers.Count; i++)
                 {
                     if (matchedUsers[i] == locateUserEP)
@@ -223,7 +222,7 @@ namespace BattleshipServer
                     }
                 }
                 return matchedUsers[0];
-            }
+           // }
         }
         static void UDPServer()
         {
