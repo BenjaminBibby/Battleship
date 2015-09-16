@@ -58,8 +58,16 @@ namespace Battleships
 
             while (_isConnected)
             {
-                incomingData = _sReader.ReadLine();
-                Console.WriteLine("Server> {0}", incomingData);
+                try
+                {
+                    incomingData = _sReader.ReadLine();
+                    Console.WriteLine("Server> {0}", incomingData);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.ReadLine();
+                }
             }
         }
     }

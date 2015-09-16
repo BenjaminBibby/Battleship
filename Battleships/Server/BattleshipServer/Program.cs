@@ -105,6 +105,10 @@ namespace BattleshipServer
 
                     lock (connectedUsersLock)
                     {
+                        if(matchedUsers.Contains(endPoint))
+                        {
+                            matchedUsers.Remove(LocateUser(endPoint));
+                        }
                         connectedUsers.Remove(endPoint);
                         infoSender.Remove(endPoint);
                         matchedUsers.Remove(endPoint);
