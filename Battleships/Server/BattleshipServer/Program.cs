@@ -124,6 +124,12 @@ namespace BattleshipServer
 
                     lock (connectedUsersLock)
                     {
+                        if(matchedUsers.Contains(endPoint))
+                        {
+                            matchedUsers.Remove(LocateUser(endPoint));
+                            connectedUsers.Add(LocateUser(endPoint));
+                        }
+
                         connectedUsers.Remove(endPoint);
                         infoSender.Remove(endPoint);
                         matchedUsers.Remove(endPoint);
@@ -139,11 +145,11 @@ namespace BattleshipServer
                 sWriter.WriteLine(encrypted);
                 sWriter.Flush();
 
-                if (matchedUsers.Count >= 2)
+                if (matchedUsers.Contains(endPoint))
                 {
                     try
                     {
-                        IPEndPoint tmpLocateUser = LocateUser();
+                        IPEndPoint tmpLocateUser = LocateUser(endPoint);
                         lock (msgsLock)
                         {
                             msgs.Add(infoSender[tmpLocateUser], sData);
@@ -189,6 +195,7 @@ namespace BattleshipServer
 
             while (true)
             {
+            string msg = "Connected!";
                 if (udpIP != null)
                 {
                     try
@@ -212,9 +219,11 @@ namespace BattleshipServer
                         //Console.WriteLine("TCP Client: " + e.Message);
                     }
                 }
+                    }     
+                
             }
         }
-        static IPEndPoint LocateUser()
+        static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
             for (int i = 0; i < matchedUsers.Count; i++)
             {
@@ -225,12 +234,24 @@ namespace BattleshipServer
                         return matchedUsers[i + 1];
                     }
                     else
+            //lock(connectedUsersLock)
+            //{
+                for (int i = 0; i < matchedUsers.Count; i++)
+                {
+                    if (matchedUsers[i] == locateUserEP)
                     {
-                        return matchedUsers[i - 1];
+                        if (i % 2 == 0)
+                        {
+                            return matchedUsers[i + 1];
+                        }
+                        else if (i % 2 == 1)
+                        {
+                            return matchedUsers[i - 1];
+                        }
                     }
                 }
-            }
-            return matchedUsers[0];
+                return matchedUsers[0];
+           // }
         }
         static void UDPServer()
         {
