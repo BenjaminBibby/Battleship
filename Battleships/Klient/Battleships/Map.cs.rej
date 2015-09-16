@@ -1,0 +1,25 @@
+diff a/Battleships/Klient/Battleships/Map.cs b/Battleships/Klient/Battleships/Map.cs	(rejected hunks)
+@@ -10,19 +10,17 @@
+     {
+         class Tile
+         {
++            private ConsoleColor col = ConsoleColor.Blue;
+             private char sprite;
+-            public bool occupied = false;
+-            public Ship occupiedShip;
++            private bool occupied;
+             public int posX, posY;
+-            public void SetCharacter(char c, ConsoleColor col)
++            public void SetCharacter(int x, int y, char c)
+             {
+                 sprite = c;
+                 Console.BackgroundColor = col;  // Set background color to blue
+-                Console.ForegroundColor = ConsoleColor.Red;
+-                Console.SetCursorPosition(posX, posY);
++                Console.SetCursorPosition(x, y);
+                 Console.Write(c);
+                 Console.BackgroundColor = ConsoleColor.Black;   // Reset background color to black
+-                Console.ForegroundColor = ConsoleColor.White;
+             }
+         }
+         private Tile[,] tiles;

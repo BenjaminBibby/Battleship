@@ -1,0 +1,10 @@
+diff a/Battleships/Klient/Battleships/Battleship.cs b/Battleships/Klient/Battleships/Battleship.cs	(rejected hunks)
+@@ -8,7 +8,7 @@
+ {
+     class Battleship : Ship
+     {
+-        public Battleship(int posX, int posY, bool horizontal)
++        public Battleship(int posX, int posY, int size, bool horizontal)
+             : base(posX, posY, 5, horizontal)
+         { 
+             
