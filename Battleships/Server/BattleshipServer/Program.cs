@@ -97,7 +97,7 @@ namespace BattleshipServer
                 try
                 {
                     sData = sReader.ReadLine();
-                 //   Console.WriteLine("Encrypted data recieved: " + sData);
+                  //  Console.WriteLine("Encrypted data recieved: " + sData);
                     string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                    /* if (!dataReceived)
                     {
@@ -141,7 +141,7 @@ namespace BattleshipServer
                 //You could write something back to the client here.
                 string msg = "hej";
                 string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
-                Console.WriteLine("Encrypted data sent: " + encrypted);
+                //Console.WriteLine("Encrypted data sent: " + encrypted);
                 sWriter.WriteLine(encrypted);
                 sWriter.Flush();
 
@@ -195,7 +195,6 @@ namespace BattleshipServer
 
             while (true)
             {
-            string msg = "Connected!";
                 if (udpIP != null)
                 {
                     try
@@ -222,7 +221,7 @@ namespace BattleshipServer
                     }     
                 
             }
-        }
+        
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
             for (int i = 0; i < matchedUsers.Count; i++)
@@ -234,25 +233,30 @@ namespace BattleshipServer
                         return matchedUsers[i + 1];
                     }
                     else
-            //lock(connectedUsersLock)
-            //{
-                for (int i = 0; i < matchedUsers.Count; i++)
-                {
-                    if (matchedUsers[i] == locateUserEP)
-                    {
-                        if (i % 2 == 0)
+                        //lock(connectedUsersLock)
+                        //{
+                        for (int b = 0; b < matchedUsers.Count; b++)
                         {
-                            return matchedUsers[i + 1];
+                            if (matchedUsers[b] == locateUserEP)
+                            {
+                                if (b % 2 == 0)
+                                {
+                                    return matchedUsers[b + 1];
+                                }
+                                else if (b % 2 == 1)
+                                {
+                                    return matchedUsers[b - 1];
+                                }
+                            }
                         }
-                        else if (i % 2 == 1)
-                        {
-                            return matchedUsers[i - 1];
-                        }
-                    }
                 }
+            }
                 return matchedUsers[0];
-           // }
-        }
+            }
+            
+            
+        
+            
         static void UDPServer()
         {
             UdpClient listener = new UdpClient(port);
@@ -282,3 +286,4 @@ namespace BattleshipServer
         }
     }
 }
+
