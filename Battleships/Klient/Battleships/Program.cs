@@ -12,14 +12,14 @@ namespace Battleships
     class Program
     {
         private static string udpIP;
+        private static int port = 11000;
         static void Main(string[] args)
         {
            // Map map = new Map(1, 1, 10, 10);
-            Console.ReadLine();
             Console.Title = "Client";
             UDPClient();
             TCPServer();
-            TCPClient c = new TCPClient(udpIP, 11000);
+            TCPClient c = new TCPClient(udpIP, port);
             Console.ReadLine();
         }
 
@@ -28,7 +28,6 @@ namespace Battleships
             TcpListener server = null;
             try
             {
-                int port = 11000;
                 IPAddress localAddress = IPAddress.Parse(GetLocalIPAddress());
                 server = new TcpListener(localAddress, port);
                 Byte[] bytes = new Byte[256];
@@ -36,29 +35,21 @@ namespace Battleships
 
                 server.Start();
                 
-                    Console.WriteLine("Waiting..");
+                Console.WriteLine("Waiting..");
 
-                    TcpClient client = server.AcceptTcpClient(); //Three way handshake
-                    Console.WriteLine("Connection established\nIP: {0}", client.Client.RemoteEndPoint.ToString());
-                    //IPAddress.Parse((IPEndPoint)(Client.RemoteEndPoint).AddressFamily)
-                    udpIP = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
-                    data = null;
-                    NetworkStream stream = client.GetStream();
-                    int i = 0;
-                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    {
-                        data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                        Console.WriteLine("Data recieved: {0}", data);
-                        //data = data.ToUpper();
-                        //byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
-                        //stream.Write(msg, 0, msg.Length);
-                        //Console.WriteLine("Message sent: {0}", data);
-                        //File.AppendAllText(@"C:\Temp\text.txt", Environment.NewLine + "Besked:" + data + " \\ IP:Port: " + client.Client.RemoteEndPoint.ToString() + " \\ Time when recieved:" + DateTime.Now.ToString());
-                    
-                    }
+                TcpClient client = server.AcceptTcpClient(); //Three way handshake
+                Console.WriteLine("Connection established\nIP: {0}", client.Client.RemoteEndPoint.ToString());
+                udpIP = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                data = null;
+                NetworkStream stream = client.GetStream();
+                int i = 0;
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                {
+                    data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                    Console.WriteLine("Data recieved: {0}", data);
+                }
 
-                    client.Close();
-                
+                client.Close();                
             }
 
             catch (SocketException e)
@@ -73,11 +64,10 @@ namespace Battleships
         }
         static void UDPClient()
         {
-            string ascii = "11000";
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             IPAddress beaconIP = IPAddress.Parse(GetBroadcastIPAdress());
-            byte[] sendBuf = Encoding.ASCII.GetBytes(ascii);
-            IPEndPoint ep = new IPEndPoint(beaconIP, 11000);
+            byte[] sendBuf = Encoding.ASCII.GetBytes("tom besked");
+            IPEndPoint ep = new IPEndPoint(beaconIP, port);
             socket.SendTo(sendBuf, ep);
         }
         public static string GetLocalIPAddress()
@@ -103,7 +93,7 @@ namespace Battleships
                 broadcastIp += ip[i] + ".";
 			}
 
-            broadcastIp += "255";            
+            broadcastIp += "255";        
             return broadcastIp;
         }
 

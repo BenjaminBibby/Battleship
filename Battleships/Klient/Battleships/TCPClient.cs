@@ -60,7 +60,7 @@ namespace Battleships
                 try
                 {
                     incomingData = _sReader.ReadLine();
-                    Console.WriteLine("Server> {0}", incomingData);
+                    Console.WriteLine(incomingData);
                 }
                 catch (Exception e)
                 {
