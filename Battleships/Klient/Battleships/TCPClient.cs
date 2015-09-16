@@ -29,7 +29,6 @@ namespace Battleships
             _sWriter = new StreamWriter(_client.GetStream(), Encoding.ASCII);
             _isConnected = true;
             string sData = null;
-            string incomingData = null;
             Thread readThread = new Thread(Read);
             readThread.Start();
 
