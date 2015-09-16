@@ -14,8 +14,14 @@ namespace Battleships
         private static string udpIP;
         static void Main(string[] args)
         {
-           // Map map = new Map(1, 1, 10, 10);
+            Map map = new Map(1, 1, 10, 10);
+            map.Draw();
+            Map map2 = new Map(13, 1, 10, 10);
+            map2.Draw();
+            Cruiser cruiser = new Cruiser(5, 7, true);
+            cruiser.Draw(map);
             Console.ReadLine();
+
             Console.Title = "Client";
             UDPClient();
             TCPServer();

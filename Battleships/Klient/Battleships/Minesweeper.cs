@@ -8,7 +8,7 @@ namespace Battleships
 {
     class Minesweeper : Ship
     {
-        public Minesweeper(int posX, int posY, int size, bool horizontal)
+        public Minesweeper(int posX, int posY, bool horizontal)
             : base(posX, posY, 2, horizontal)
         { 
             

@@ -8,7 +8,7 @@ namespace Battleships
 {
     class Battleship : Ship
     {
-        public Battleship(int posX, int posY, int size, bool horizontal)
+        public Battleship(int posX, int posY, bool horizontal)
             : base(posX, posY, 5, horizontal)
         { 
             

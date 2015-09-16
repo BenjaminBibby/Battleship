@@ -8,7 +8,7 @@ namespace Battleships
 {
     class Cruiser : Ship
     {
-        public Cruiser(int posX, int posY, int size, bool horizontal)
+        public Cruiser(int posX, int posY, bool horizontal)
             : base(posX, posY, 4, horizontal)
         { 
             
