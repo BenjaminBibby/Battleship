@@ -44,31 +44,20 @@ namespace Battleships
                 _sWriter.WriteLine(md5Encrypt);
                 _sWriter.Flush();*/
 
-                Console.Write(">");
                 sData = Console.ReadLine();
                 string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
-                //Console.WriteLine("encrypted data " + encrypted);
                 _sWriter.WriteLine(encrypted);
                 _sWriter.Flush();
-
-                Console.WriteLine("Data recieved " + incomingData);
          
+                try
                 {
-                    Console.Write(">");
-                    sData = Console.ReadLine();
-                    string encrypted2 = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
-                    _sWriter.WriteLine(encrypted2);
                     _sWriter.Flush();
-
-                    try
-                    {
-                        _sWriter.Flush();
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                
             }
         }
 
@@ -88,7 +77,7 @@ namespace Battleships
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine("/n"+e.Message);
                     Console.ReadLine();
                 }
             }
@@ -110,7 +99,7 @@ namespace Battleships
                 sha256Calculated.Append(sha256.Hash[i].ToString("x2"));
             }
 
-            Console.WriteLine(sha256Calculated);
+            //Console.WriteLine(sha256Calculated);
             sha256Calc = sha256Calculated.ToString();
 
         }

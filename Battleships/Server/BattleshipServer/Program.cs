@@ -29,6 +29,7 @@ namespace BattleshipServer
         private static object msgsLock = new object();
         private static object usernameLock = new object();
         private static TcpClient client;
+
         static void Main(string[] args)
         {
             Console.Title = "Server";
@@ -53,12 +54,17 @@ namespace BattleshipServer
                 {
                     matchedUsers.Add(connectedUsers[0]);
                     Console.WriteLine("Added user: {0}", connectedUsers[0]);
-                    matchedUsers.Add(connectedUsers[1]);
-                    Console.WriteLine("Added user: {0}", connectedUsers[1]);
-                    connectedUsers.RemoveRange(0, 2);
+
+                    if(connectedUsers.Count >= 2)
+                    {
+                        matchedUsers.Add(connectedUsers[1]);
+                        Console.WriteLine("Added user: {0}", connectedUsers[1]);
+                        connectedUsers.RemoveRange(0, 2);
+                    }
                 }
             }
         }
+
         static void TcpServer()
         {
             server = new TcpListener(IPAddress.Any, port);
@@ -66,18 +72,20 @@ namespace BattleshipServer
             isRunning = true;
             LoopClient();
         }
+
         public static void LoopClient()
         {
             while (isRunning)
             {
-                IPAddress localAddress = IPAddress.Parse("10.0.0.202");
+                //IPAddress localAddress = IPAddress.Parse("10.0.0.202");
                 Byte[] bytes = new Byte[256];
-               // string data = null;
+                // string data = null;
                 TcpClient newClient = server.AcceptTcpClient();
                 Thread t = new Thread(new ParameterizedThreadStart(HandleClient));
                 t.Start(newClient);
             }
         }
+
         public static void HandleClient(object obj)
         {
             TcpClient client = (TcpClient)obj;
@@ -92,23 +100,31 @@ namespace BattleshipServer
             {
                 connectedUsers.Add(endPoint);
             }
-            Console.WriteLine("Connected users: {0}", connectedUsers.Count);
+            Console.WriteLine("Queued users: {0}", connectedUsers.Count);
             infoSender.Add(endPoint, sWriter);
 
-            string simon = "Send Username!";
+            string simon = "Enter username: ";
             string encryptedd = CipherUtility.Encrypt<AesManaged>(simon, "password", "salt");
             sWriter.WriteLine(encryptedd);
             sWriter.Flush();
-            sData = sReader.ReadLine();
-            string dedcrypt = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
-            usernames.Add(endPoint, dedcrypt);
+            try
+            {
+                sData = sReader.ReadLine();
+                string dedcrypt = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                usernames.Add(endPoint, dedcrypt);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
+                UserDisconnected(endPoint);
+            }
 
             while (client.Connected)
             {
                 try
                 {
                     sData = sReader.ReadLine();
-                  //  Console.WriteLine("Encrypted data recieved: " + sData);
+                    //Console.WriteLine("Encrypted data recieved: " + sData);
                     string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                     #region
                     //TIL SIDST I PROJEKTET SKAL DET VIRKE
@@ -133,34 +149,16 @@ namespace BattleshipServer
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    //Console.WriteLine(e.Message);
                     Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
-
-                    lock (connectedUsersLock)
-                    {
-                        if(matchedUsers.Contains(endPoint))
-                        {
-                            matchedUsers.Remove(LocateUser(endPoint));
-                            connectedUsers.Add(LocateUser(endPoint));
-                        }
-                        lock(usernameLock)
-                        {
-                            usernames.Remove(endPoint);
-                        }
-                        connectedUsers.Remove(endPoint);
-                        infoSender.Remove(endPoint);
-                        matchedUsers.Remove(endPoint);
-                    }
-
-                    Console.WriteLine("Connected users: {0}", connectedUsers.Count);
-                    Thread.CurrentThread.Abort();
+                    UserDisconnected(endPoint);
                 }
                 //You could write something back to the client here.
-                string msg = "hej";
-                string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
-                //Console.WriteLine("Encrypted data sent: " + encrypted);
-                sWriter.WriteLine(encrypted);
-                sWriter.Flush();
+                //string msg = "Message";
+                //string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
+                ////Console.WriteLine("Encrypted data sent: " + encrypted);
+                //sWriter.WriteLine(encrypted);
+                //sWriter.Flush();
 
                 if (matchedUsers.Contains(endPoint))
                 {
@@ -177,12 +175,12 @@ namespace BattleshipServer
                     }
                     catch (Exception e)
                     {
-                        throw e;
                         Console.WriteLine(e.Message);
                     }
                 }
             }
         }
+
         private static void MasterSender()
         {
             Dictionary<StreamWriter, string> tmp = new Dictionary<StreamWriter, string>();
@@ -209,6 +207,7 @@ namespace BattleshipServer
             }
 
         }
+
         static void TCPClient()
         {
             string msg = "Connected";
@@ -236,10 +235,8 @@ namespace BattleshipServer
                     //Console.WriteLine("TCP Client: " + e.Message);
                 }
             }
-        }  
-                
+        }                 
             
-
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
 
@@ -262,10 +259,7 @@ namespace BattleshipServer
             return matchedUsers[0];
 
         }
-            
-            
-        
-            
+                    
         static void UDPServer()
         {
             UdpClient listener = new UdpClient(port);
@@ -273,14 +267,15 @@ namespace BattleshipServer
 
             while (!done)
             {
-                Console.WriteLine("Venter på opkald..");
+                Console.WriteLine("Awaiting call...");
                 byte[] bytes = listener.Receive(ref groupEP);
                 udpIP = groupEP.Address.ToString();
-                Console.WriteLine("Recieved broadcast from {0}: \n {1}\n", groupEP.ToString(), Encoding.ASCII.GetString(bytes, 0, bytes.Length));
+                Console.WriteLine("Recieved broadcast from {0}> {1}", groupEP.ToString(), Encoding.ASCII.GetString(bytes, 0, bytes.Length));
                 Thread clientThread = new Thread(() => TCPClient());
                 clientThread.Start();
             }
         }
+
         public static string GetLocalIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -292,6 +287,28 @@ namespace BattleshipServer
                 }
             }
             throw new Exception("Local IP Address Not Found!");
+        }
+
+        public static void UserDisconnected(IPEndPoint endPoint)
+        {
+            lock (connectedUsersLock)
+            {
+                if (matchedUsers.Contains(endPoint))
+                {
+                    connectedUsers.Add(LocateUser(endPoint));
+                    matchedUsers.Remove(LocateUser(endPoint));
+                }
+                lock (usernameLock)
+                {
+                    usernames.Remove(endPoint);
+                }
+                connectedUsers.Remove(endPoint);
+                infoSender.Remove(endPoint);
+                matchedUsers.Remove(endPoint);
+            }
+
+            Console.WriteLine("Queued users: {0}", connectedUsers.Count);
+            Thread.CurrentThread.Abort();
         }
     }
 }
