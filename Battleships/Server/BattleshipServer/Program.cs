@@ -177,8 +177,7 @@ namespace BattleshipServer
         {
             string msg = "Connected!";
             
-            while (true)
-            {
+
                 if (udpIP != null)
                 {
                     try
@@ -201,7 +200,7 @@ namespace BattleshipServer
                     {
                         //Console.WriteLine("TCP Client: " + e.Message);
                     }     
-                }
+                
             }
         }
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
