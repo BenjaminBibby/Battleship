@@ -32,60 +32,22 @@ namespace Battleships
             
         }
         public void DeployShip(Map map, int posX, int posY, bool horizontal)
-        {
-            if (isHorizontal)
-            {
-                if (((posX + size) > map.Width && posX < map.PosX) && (posY > map.Height && posY < map.PosY))
-                {
-                    return;
-                }
-            }
-            else if (!isHorizontal)
-            {
-                if (((posX + size) > map.Width && posX < map.PosX) && (posY > map.Height && posY < map.PosY))
-                {
-                    return;
-                }
-            }
+        { 
             // Deploy ship.
-            for (int i = 0; i < size; i++)
-            { 
-                int nextPosX = (isHorizontal == true ? posX + i : posX);
-                int nextPosY = (isHorizontal == true ? posY : posY + i);
-
-                map.OccupyTile(posX, posY, this);
-                Draw(map);
-            }
         }
-        public void Draw(Map map)
+        public void Draw()
         { 
             // Draw ship.
             for (int i = 0; i < size; i++)
             {
-                int nextPosX = (isHorizontal == true ? posX + i : posX);
-                int nextPosY = (isHorizontal == true ? posY : posY + i);
+                int nextPosX = (isHorizontal == true ? (posX + i) : posX);
+                int nextPosY = (isHorizontal == true ? posY : (posY + i));
 
-                map.MarkTile(nextPosX, nextPosY, ' ', ConsoleColor.White);
+                Console.SetCursorPosition(nextPosX, nextPosY);
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.Write(" ");
+                Console.BackgroundColor = ConsoleColor.Black;
             }
-        }
-        public void MoveShip(Map map, int x, int y)
-        {
-            if (isHorizontal)
-            {
-                if (((x + size) > map.Width && x < map.PosX) && (y > map.Height && y < map.PosY))
-                {
-                    return;
-                }
-            }
-            else if(!isHorizontal)
-            {
-                if (((x + size) > map.Width && x < map.PosX) && (y > map.Height && y < map.PosY))
-                {
-                    return;
-                }
-            }
-            posX = x;
-            posY = y;
         }
     }
 }

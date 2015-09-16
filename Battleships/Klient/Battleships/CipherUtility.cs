@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.IO;
 
@@ -14,7 +11,7 @@ public class CipherUtility
         DeriveBytes rgb = new Rfc2898DeriveBytes(password, Encoding.Unicode.GetBytes(salt));
 
         SymmetricAlgorithm algorithm = new T();
-
+        algorithm.Padding = PaddingMode.PKCS7;
         byte[] rgbKey = rgb.GetBytes(algorithm.KeySize >> 3);
         byte[] rgbIV = rgb.GetBytes(algorithm.BlockSize >> 3);
 
@@ -35,7 +32,7 @@ public class CipherUtility
     }
 
     public static string Decrypt<T>(string text, string password, string salt)
-       where T : SymmetricAlgorithm, new()
+         where T : SymmetricAlgorithm, new()
     {
         DeriveBytes rgb = new Rfc2898DeriveBytes(password, Encoding.Unicode.GetBytes(salt));
 

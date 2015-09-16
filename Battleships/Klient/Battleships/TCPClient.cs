@@ -58,6 +58,7 @@ namespace Battleships
                     sData = Console.ReadLine();
                     string encrypted2 = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
                     _sWriter.WriteLine(encrypted2);
+                    _sWriter.Flush();
 
                     try
                     {
@@ -83,8 +84,7 @@ namespace Battleships
                 {
                     incomingData = _sReader.ReadLine();
                     string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
-                    Console.WriteLine("Server> {0}", decrypted);
-                    Console.WriteLine(incomingData);
+                    Console.WriteLine(decrypted);
                 }
                 catch (Exception e)
                 {

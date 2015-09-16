@@ -21,11 +21,13 @@ namespace BattleshipServer
         private static string sData;
         private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
         private static Dictionary<StreamWriter, string> msgs = new Dictionary<StreamWriter, string>();
+        private static Dictionary<IPEndPoint, string> usernames = new Dictionary<IPEndPoint, string>();
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
         private static object connectedUsersLock = new object();
         private static object msgsLock = new object();
+        private static object usernameLock = new object();
         private static TcpClient client;
         static void Main(string[] args)
         {
@@ -86,25 +88,21 @@ namespace BattleshipServer
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
-
-            lock(connectedUsersLock)
             lock (connectedUsersLock)
             {
                 connectedUsers.Add(endPoint);
             }
-
-            sWriter.Write("Enter username: ");
-            sWriter.Flush();
-
-            string username = sReader.ReadLine();
-
-            lock(usernameLock)
-            {               
-                usernames.Add(endPoint, username);
-            }
-
             Console.WriteLine("Connected users: {0}", connectedUsers.Count);
             infoSender.Add(endPoint, sWriter);
+
+            string simon = "Send Username!";
+            string encryptedd = CipherUtility.Encrypt<AesManaged>(simon, "password", "salt");
+            sWriter.WriteLine(encryptedd);
+            sWriter.Flush();
+            sData = sReader.ReadLine();
+            string dedcrypt = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+            usernames.Add(endPoint, dedcrypt);
+
             while (client.Connected)
             {
                 try
@@ -112,7 +110,9 @@ namespace BattleshipServer
                     sData = sReader.ReadLine();
                   //  Console.WriteLine("Encrypted data recieved: " + sData);
                     string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
-                   /* if (!dataReceived)
+                    #region
+                    //TIL SIDST I PROJEKTET SKAL DET VIRKE
+                    /* if (!dataReceived)
                     {
                         if (decrypted != "f4cefed49fb2f58655cde4c216f4e52a1f2aaaea0b5809664a97f075026f92bc")
                         {
@@ -127,6 +127,7 @@ namespace BattleshipServer
                         }
                     }
                     */
+#endregion
                     Console.WriteLine("Data recieved and decrypted: " + decrypted);
 
                 }
@@ -139,15 +140,13 @@ namespace BattleshipServer
                     {
                         if(matchedUsers.Contains(endPoint))
                         {
-                            connectedUsers.Add(LocateUser(endPoint));
                             matchedUsers.Remove(LocateUser(endPoint));
+                            connectedUsers.Add(LocateUser(endPoint));
                         }
-
                         lock(usernameLock)
                         {
                             usernames.Remove(endPoint);
                         }
-
                         connectedUsers.Remove(endPoint);
                         infoSender.Remove(endPoint);
                         matchedUsers.Remove(endPoint);
@@ -168,14 +167,17 @@ namespace BattleshipServer
                     try
                     {
                         IPEndPoint tmpLocateUser = LocateUser(endPoint);
+                        sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                        sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
                         lock (msgsLock)
                         {
-                            msgs.Add(infoSender[tmpLocateUser], usernames[endPoint] + "> " + sData);
+                            msgs.Add(infoSender[tmpLocateUser], sData);
                         }
 
                     }
                     catch (Exception e)
                     {
+                        throw e;
                         Console.WriteLine(e.Message);
                     }
                 }
@@ -203,14 +205,14 @@ namespace BattleshipServer
                         msgs.Remove(key);
                     }
                 }
-                tmp.Clear();   
                 tmp.Clear();
             }
+
         }
         static void TCPClient()
         {
-            string msg = "Connected!";
-            
+            string msg = "Connected";
+
             if (udpIP != null)
             {
                 try
@@ -229,79 +231,37 @@ namespace BattleshipServer
                     client.Close();
                     Thread.CurrentThread.Abort();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //Console.WriteLine("TCP Client: " + e.Message);
-                }     
-            string msg = "Connected";
-
-            while (true)
-            {
-                if (udpIP != null)
-                {
-                    try
-                    {
-                        TcpClient client = new TcpClient(udpIP, port);
-                        byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
-                        NetworkStream stream = client.GetStream();
-                        stream.Write(data, 0, data.Length);
-                        Console.WriteLine("Message sent: {0}", msg);
-                        data = new byte[256];
-                        string responseString = string.Empty;
-
-                        //int bytes = stream.Read(data, 0, data.Length);
-                        //responseString = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                        stream.Close();
-                        client.Close();
-                        Thread.CurrentThread.Abort();
-                    }
-                    catch (Exception)
-                    {
-                        //Console.WriteLine("TCP Client: " + e.Message);
-                    }
                 }
-                    }     
-                
             }
-        
+        }  
+                
+            
+
         static IPEndPoint LocateUser(IPEndPoint locateUserEP)
         {
+
             for (int i = 0; i < matchedUsers.Count; i++)
             {
-                if (matchedUsers[i].Address.ToString() == udpIP)
+                if (matchedUsers[i] == locateUserEP && matchedUsers.Count >= 2)
                 {
                     if (i % 2 == 0)
                     {
                         return matchedUsers[i + 1];
                     }
-                    else
-                        //lock(connectedUsersLock)
-                        //{
-                        for (int b = 0; b < matchedUsers.Count; b++)
-            //lock(connectedUsersLock)
-            //{
-                for (int i = 0; i < matchedUsers.Count; i++)
-                {
-                    if (matchedUsers[i] == locateUserEP && matchedUsers.Count >= 2)
+                    else if (i % 2 == 1)
                     {
-                        if (i % 2 == 0)
-                        {
-                            if (matchedUsers[b] == locateUserEP)
-                            {
-                                if (b % 2 == 0)
-                                {
-                                    return matchedUsers[b + 1];
-                                }
-                                else if (b % 2 == 1)
-                                {
-                                    return matchedUsers[b - 1];
-                                }
-                            }
-                        }
+                        return matchedUsers[i - 1];
+                    }
                 }
+
             }
-                return matchedUsers[0];
-            }
+
+            return matchedUsers[0];
+
+        }
             
             
         

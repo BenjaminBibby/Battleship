@@ -8,7 +8,7 @@ namespace Battleships
 {
     class Frigate : Ship
     {
-        public Frigate(int posX, int posY, bool horizontal)
+        public Frigate(int posX, int posY, int size, bool horizontal)
             : base(posX, posY, 3, horizontal)
         { 
             
