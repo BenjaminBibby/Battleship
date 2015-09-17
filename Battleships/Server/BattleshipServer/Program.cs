@@ -29,6 +29,7 @@ namespace BattleshipServer
         private static object msgsLock = new object();
         private static object usernameLock = new object();
         private static TcpClient client;
+        private static List<GameWorld> gwList = new List<GameWorld>();
 
         static void Main(string[] args)
         {
@@ -71,7 +72,7 @@ namespace BattleshipServer
                         {
                             msgs.Add(infoSender[connectedUsers[1]], sData);
                         }
-                        
+                        gwList.Add(new GameWorld(connectedUsers[0], connectedUsers[1]));
                         connectedUsers.RemoveRange(0, 2);
                     }
                 }
@@ -166,25 +167,44 @@ namespace BattleshipServer
                     Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
                     UserDisconnected(endPoint);
                 }
-                //You could write something back to the client here.
-                //string msg = "Message";
-                //string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
-                ////Console.WriteLine("Encrypted data sent: " + encrypted);
-                //sWriter.WriteLine(encrypted);
-                //sWriter.Flush();
 
                 if (matchedUsers.Contains(endPoint))
                 {
                     try
                     {
-                        IPEndPoint tmpLocateUser = LocateUser(endPoint);
-                        sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
-                        sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
-                        lock (msgsLock)
+                        foreach (GameWorld gw in gwList)
                         {
-                            msgs.Add(infoSender[tmpLocateUser], sData);
+                            if (gw.playerOneEP == endPoint)
+                            {
+                                if (gw.PlayerOneTurn)
+                                {
+                                    gw.TurnMaster(endPoint);
+                                    IPEndPoint tmpLocateUser = LocateUser(endPoint);
+                                    sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                                    sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
+                                    lock (msgsLock)
+                                    {
+                                        msgs.Add(infoSender[tmpLocateUser], sData);
+                                    }
+                                }
+                                break;
+                            }
+                            else if (gw.playerTwoEP == endPoint)
+                            {
+                                if (!gw.PlayerOneTurn)
+                                {
+                                    gw.TurnMaster(endPoint);
+                                    IPEndPoint tmpLocateUser = LocateUser(endPoint);
+                                    sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                                    sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
+                                    lock (msgsLock)
+                                    {
+                                        msgs.Add(infoSender[tmpLocateUser], sData);
+                                    }
+                                }
+                                break;
+                            }
                         }
-
                     }
                     catch (Exception e)
                     {

@@ -76,9 +76,13 @@ namespace Battleships
                     if (decrypted == "Matched")
                     {
                         Program.Matched = true;
+                        Console.Clear();
                         GameWorld gw = new GameWorld();
                     }
-                    Console.WriteLine(decrypted);
+                    else
+                    {
+                        Console.WriteLine(decrypted);
+                    }
                 }
                 catch (Exception e)
                 {
