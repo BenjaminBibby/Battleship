@@ -20,13 +20,35 @@ namespace BattleshipServer
         private static bool dataReceived;
         private static string sData;
         private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
+
+        public static Dictionary<IPEndPoint, StreamWriter> InfoSender
+        {
+            get { return Program.infoSender; }
+        }
         private static Dictionary<StreamWriter, string> msgs = new Dictionary<StreamWriter, string>();
+
+        public static Dictionary<StreamWriter, string> Msgs
+        {
+            get { return Program.msgs; }
+            set { Program.msgs = value; }
+        }
         private static Dictionary<IPEndPoint, string> usernames = new Dictionary<IPEndPoint, string>();
+
+        public static Dictionary<IPEndPoint, string> Usernames
+        {
+            get { return Program.usernames; }
+        }
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
         private static object connectedUsersLock = new object();
         private static object msgsLock = new object();
+
+        public static object MsgsLock
+        {
+            get { return Program.msgsLock; }
+            set { Program.msgsLock = value; }
+        }
         private static object usernameLock = new object();
         private static TcpClient client;
         private static List<GameWorld> gwList = new List<GameWorld>();
@@ -110,10 +132,6 @@ namespace BattleshipServer
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
-            lock (connectedUsersLock)
-            {
-                connectedUsers.Add(endPoint);
-            }
             Console.WriteLine("Queued users: {0}", connectedUsers.Count);
             infoSender.Add(endPoint, sWriter);
 
@@ -132,14 +150,17 @@ namespace BattleshipServer
                 Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
                 UserDisconnected(endPoint);
             }
-
+            lock (connectedUsersLock)
+            {
+                connectedUsers.Add(endPoint);
+            }
             while (client.Connected)
             {
                 try
                 {
                     sData = sReader.ReadLine();
                     //Console.WriteLine("Encrypted data recieved: " + sData);
-                    string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                    sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                     #region
                     //TIL SIDST I PROJEKTET SKAL DET VIRKE
                     /* if (!dataReceived)
@@ -158,7 +179,7 @@ namespace BattleshipServer
                     }
                     */
 #endregion
-                    Console.WriteLine("Data recieved and decrypted: " + decrypted);
+                    Console.WriteLine("Data recieved and decrypted: " + sData);
 
                 }
                 catch (Exception e)
@@ -178,9 +199,8 @@ namespace BattleshipServer
                             {
                                 if (gw.PlayerOneTurn)
                                 {
-                                    gw.TurnMaster(endPoint);
+                                    gw.TurnMaster(endPoint,sData);
                                     IPEndPoint tmpLocateUser = LocateUser(endPoint);
-                                    sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                                     sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
                                     lock (msgsLock)
                                     {
@@ -193,9 +213,8 @@ namespace BattleshipServer
                             {
                                 if (!gw.PlayerOneTurn)
                                 {
-                                    gw.TurnMaster(endPoint);
+                                    gw.TurnMaster(endPoint,sData);
                                     IPEndPoint tmpLocateUser = LocateUser(endPoint);
-                                    sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                                     sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
                                     lock (msgsLock)
                                     {

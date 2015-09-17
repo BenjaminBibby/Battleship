@@ -16,29 +16,87 @@ namespace BattleshipServer
         public IPEndPoint playerOneEP;
         public IPEndPoint playerTwoEP;
         private bool playerOneTurn;
+        Map playerOneMap = new Map(1, 1, 10, 10);
+        Map playerTwoMap = new Map(13, 1, 10, 10);
 
         public bool PlayerOneTurn
         {
             get { return playerOneTurn; }
-            set { playerOneTurn = value; }
         }
         public GameWorld(IPEndPoint playerOneEP, IPEndPoint playerTwoEP)
         {
             playerOneTurn = true;
             this.playerOneEP = playerOneEP;
             this.playerTwoEP = playerTwoEP;
-            Map playerOneMap = new Map(1, 1, 10, 10);
-            Map playerTwoMap = new Map(13, 1, 10, 10);
         }
-        public void TurnMaster(IPEndPoint endPoint)
+        public void TurnMaster(IPEndPoint endPoint, string targetTile)
         {
+
+            #region bogstavertiltal
+            string letter = targetTile.Remove(1);
+            string number = targetTile.Substring(1);
+            int posY = 123;
+            switch (letter)
+            {
+                case "a":
+                    posY = 0;
+                    break;
+                case "b":
+                    posY = 1;
+                    break;
+                case "c":
+                    posY = 2;
+                    break;
+                case "d":
+                    posY = 3;
+                    break;
+                case "e":
+                    posY = 4;
+                    break;
+                case "f":
+                    posY = 5;
+                    break;
+                case "g":
+                    posY = 6;
+                    break;
+                case "h":
+                    posY = 7;
+                    break;
+                case "i":
+                    posY = 8;
+                    break;
+                case "j":
+                    posY = 9;
+                    break;
+            }
+            #endregion
             if (endPoint == playerOneEP)
             {
-                playerOneTurn = false;
+                if (!playerTwoMap.CheckTile(int.Parse(number), posY))
+                {
+                    
+                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerOneEP]+" missed.", "password", "salt");
+                    lock (Program.MsgsLock)
+                    {
+                        Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
+                        Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
+                    }
+                    playerOneTurn = false;
+                }
             }
             else if (endPoint == playerTwoEP)
             {
-                playerOneTurn = true;
+                if (!playerOneMap.CheckTile(int.Parse(number), posY))
+                {
+                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerTwoEP] + " missed.", "password", "salt");
+                    lock (Program.MsgsLock)
+                    {
+                        Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
+                        Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
+                    }
+                    playerOneTurn = true;
+                }
+                
             }
         }
 

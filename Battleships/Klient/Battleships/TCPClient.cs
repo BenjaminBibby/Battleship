@@ -20,9 +20,13 @@ namespace Battleships
         private StreamReader _sReader;
         private static string sha256Calc;
         private string incomingData = null;
+        private static string[] letterArray;
+        private static string[] numberArray;
 
         public TCPClient(string ipAddress, int portNum)
         {
+            letterArray = new string[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" };
+            numberArray = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
             CalculateSHA256();
             _client = new TcpClient();
             _client.Connect(ipAddress, portNum);
@@ -37,7 +41,18 @@ namespace Battleships
             string sData = null;
             Thread readThread = new Thread(Read);
             readThread.Start();
-
+            sData = Console.ReadLine();
+            string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+            _sWriter.WriteLine(encrypted);
+            try
+            {
+                _sWriter.Flush();
+            }
+            catch (Exception e)
+            {
+                throw;
+                Console.WriteLine(e.Message);
+            }
             while (_isConnected)
             {
                /* string md5Encrypt = CipherUtility.Encrypt<AesManaged>(sha256Calc, "password", "salt");
@@ -45,19 +60,33 @@ namespace Battleships
                 _sWriter.Flush();*/
 
                 sData = Console.ReadLine();
-                string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
-                _sWriter.WriteLine(encrypted);
-                _sWriter.Flush();
-         
-                try
+
+                if (Program.Matched)
                 {
-                    _sWriter.Flush();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
+                    string letter = sData.Remove(1);
+                    string number = sData.Substring(1);
+                    if (letterArray.Contains(letter) && numberArray.Contains(number))
+                    {
+                        encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+                        _sWriter.WriteLine(encrypted);
+                        if (!Program.Matched)
+                        {
+                            Console.WriteLine("Waiting for opponenet..");
+                        }
+
+                        try
+                        {
+                            _sWriter.Flush();
+                        }
+                        catch (Exception e)
+                        {
+                            throw;
+                            Console.WriteLine(e.Message);
+                        }
                 
+                    }
+                }
+
             }
         }
 
@@ -86,7 +115,7 @@ namespace Battleships
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("/n"+e.Message);
+                    Console.WriteLine("\n"+e.Message);
                     Console.ReadLine();
                 }
             }

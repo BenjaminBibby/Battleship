@@ -13,7 +13,6 @@ namespace Battleships
     {
         private static string udpIP;
         private static bool matched;
-
         public static bool Matched
         {
             get { return Program.matched; }
