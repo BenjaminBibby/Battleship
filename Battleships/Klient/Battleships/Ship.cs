@@ -35,31 +35,19 @@ namespace Battleships
         }
         public void DeployShip(int posX, int posY, bool horizontal)
         {
-            /*if (isHorizontal)
+            if (PlaceFree_X(0) || PlaceFree_Y(0))
             {
-                if (((posX + size) > map.Width && posX < map.PosX) && (posY > map.Height && posY < map.PosY))
+                // Deploy ship.
+                for (int i = 0; i < size; i++)
                 {
-                    return;
+                    int nextPosX = (isHorizontal == true ? posX + i : posX);
+                    int nextPosY = (isHorizontal == true ? posY : posY + i);
+
+                    map.OccupyTile(nextPosX, nextPosY, this);
+                    Draw();
+                    map.PrintAllOccupiedTiles();
+
                 }
-            }
-            else if (!isHorizontal)
-            {
-                if (((posX + size) > map.Width && posX < map.PosX) && (posY > map.Height && posY < map.PosY))
-                {
-                    return;
-                }
-            }*/
-
-            // CHECK SURROUNDING TILES BEFORE DEPLOYING!!! 
-
-            // Deploy ship.
-            for (int i = 0; i < size; i++)
-            { 
-                int nextPosX = (isHorizontal == true ? posX + i : posX);
-                int nextPosY = (isHorizontal == true ? posY : posY + i);
-
-                map.OccupyTile(posX, posY, this);
-                Draw();
             }
         }
         public void Draw()
@@ -83,24 +71,62 @@ namespace Battleships
                 map.MarkTile(nextPosX, nextPosY, ' ', ConsoleColor.Blue);
             }
         }
-        public void MoveShip(int x, int y)
+        public bool MoveShip(ConsoleKey key)
         {
-            if (isHorizontal)
+            Console.SetCursorPosition(0, 14);
+            
+            int x = 0, y = 0;
+            switch (key)
             {
-                if (((x + size) > map.Width && x < map.PosX) && (y > map.Height && y < map.PosY))
-                {
-                    return;
-                }
+                case ConsoleKey.DownArrow:
+                    {
+                        x = 0;
+                        y = 1;
+                    }
+                    break;
+                case ConsoleKey.UpArrow:
+                    {
+                        x = 0;
+                        y = -1;
+                    }
+                    break;
+                case ConsoleKey.LeftArrow:
+                    {
+                        x = -1;
+                        y = 0;
+                    }
+                    break;
+                case ConsoleKey.RightArrow:
+                    {
+                        x = 1;
+                        y = 0;
+                    }
+                    break;
+                case ConsoleKey.Enter:
+                    {
+                        DeployShip(posX, posY, isHorizontal);
+                        return true;
+                    }
+                case ConsoleKey.T:
+                    {
+                        TurnShip();
+                        return false;
+                    }
+                default:
+                    {
+                        return false;
+                    }
             }
-            else if(!isHorizontal)
+            if (PlaceFree_X(x) && PlaceFree_Y(y))
             {
-                if (((x + size) > map.Width && x < map.PosX) && (y > map.Height && y < map.PosY))
-                {
-                    return;
-                }
+                Hide();
+                posX = posX + x;
+                posY = posY + y;
+                Draw();
+                Console.SetCursorPosition(0, 14);
+                Console.Write("[" + posX + "," + posY + "]\n" + "Size: " + size);
             }
-            posX = x;
-            posY = y;
+            return false;
         }
         public void TurnShip()
         {
@@ -109,18 +135,29 @@ namespace Battleships
                 Hide();
                 isHorizontal = !isHorizontal;
                 Draw();
+                Console.SetCursorPosition(0, 14);
             }
         }
         public bool PlaceFree_X(int dir)
         {
             int width = isHorizontal == true ? size : 0;
             // Check that the wanted position is within the boundaries of the map
-            if ((dir > 0 && (posX + width) < map.Width) || (dir < 0 && posX > (map.PosX + dir)))
+            if ((dir >= 0 && ((posX + width + dir) < (map.PosX + map.Width - 1))) || (dir <= 0 && ((posX + dir) >= map.PosX - 1)))
             {
-                // Check that none of tiles are occupied
-                for (int i = 0; i < size; i++)
+                if (dir > 0)
                 {
-                    if(map.CheckTile(posX + dir + i, posY))
+                // Check that none of tiles are occupied
+                    for (int i = 0; i < size; i++)
+                    {
+                        if (map.CheckTile(posX + dir + i, posY))
+                        {
+                            return false;
+                        }   
+                    }
+                }
+                else if (dir < 0)
+                {
+                    if (map.CheckTile(posX + dir, posY))
                     {
                         return false;
                     }
@@ -131,12 +168,22 @@ namespace Battleships
         }
         public bool PlaceFree_Y(int dir)
         {
-            int height = isHorizontal == false ? size : 0;
-            if ((dir > 0 && (posY + height) < map.Height) || (dir < 0 && posY > (map.PosY + dir)))
+            int height = isHorizontal == true ? 0 : size;
+            if ((dir >= 0 && ((posY + height + dir) < (map.PosY + map.Height - 1))) || (dir <= 0 && ((posY + dir) >= map.PosY - 1)))
             {
-                for (int i = 0; i < size; i++)
+                if (dir > 0)
                 {
-                    if (map.CheckTile(posX, posY + dir + i))
+                    for (int i = 0; i < size; i++)
+                    {
+                        if (map.CheckTile(posX, posY + dir + i))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else if (dir < 0)
+                {
+                    if (map.CheckTile(posX, posY + dir))
                     {
                         return false;
                     }

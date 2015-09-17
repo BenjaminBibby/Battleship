@@ -107,7 +107,25 @@ namespace Battleships
         }
         public bool CheckTile(int posX, int posY)
         {
-            return tiles[posX, posY].occupied;
+            if ((posX < width && posX > this.posX && posY < height && posY > this.posY))
+            {
+                bool occ = tiles[posX, posY].occupied;
+                return occ;
+            }
+            return false;
+        }
+        public void PrintAllOccupiedTiles()
+        {
+            string strTile = "";
+            foreach(Tile t in tiles)
+            {
+                if (t.occupied)
+                {
+                    strTile += "[" + t.posX + "," + t.posY + "] ";
+                }
+            }
+            Console.SetCursorPosition(0, 16);
+            Console.WriteLine(strTile);
         }
     }
 }

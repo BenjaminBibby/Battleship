@@ -45,6 +45,7 @@
     <Compile Include="CipherUtility.cs" />
     <Compile Include="Cruiser.cs" />
     <Compile Include="Frigate.cs" />
+    <Compile Include="GameWorld.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="Minesweeper.cs" />
     <Compile Include="Program.cs" />
