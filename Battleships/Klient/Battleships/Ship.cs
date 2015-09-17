@@ -45,7 +45,7 @@ namespace Battleships
 
                     map.OccupyTile(nextPosX, nextPosY, this);
                     Draw();
-                    map.PrintAllOccupiedTiles();
+                    //map.PrintAllOccupiedTiles();
 
                 }
             }

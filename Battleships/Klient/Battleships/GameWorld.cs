@@ -9,15 +9,8 @@ namespace Battleships
     class GameWorld
     {
         private bool turn, move;
-        private Map map, enemyMap;
-        public GameWorld()
-        {
-            this.map = new Map(1, 1, 10, 10);
-            map.Draw();
-            this.enemyMap = new Map(13, 1, 10, 10);
-            enemyMap.Draw();
+
         private List<Ship> ships;
-        private bool turn;
         Map yourMap;
         Map enemyMap;
         public Map YourMap
@@ -49,19 +42,19 @@ namespace Battleships
                 placed = false;
                 if (i < 2)
                 {
-                    ships[i] = new Minesweeper(1, 1, true, map);
+                    ships[i] = new Minesweeper(1, 1, true, yourMap);
                 }
                 else if (i < 3)// Feel the magic
                 {
-                    ships[i] = new Frigate(1, 1, true, map);
+                    ships[i] = new Frigate(1, 1, true, yourMap);
                 }
                 else if (i < 4)
                 {
-                    ships[i] = new Cruiser(1, 1, true, map);
+                    ships[i] = new Cruiser(1, 1, true, yourMap);
                 }
                 else if (i < 5)
                 {
-                    ships[i] = new Battleship(1, 1, true, map);
+                    ships[i] = new Battleship(1, 1, true, yourMap);
                 }
                 ships[i].Draw();
                 while (!placed)
@@ -70,6 +63,10 @@ namespace Battleships
                     placed = ships[i].MoveShip(key);
                 }
                 // Place ships            
+            }
+            foreach (Ship s in ships)
+            {
+                s.Draw();
             }
             // Send map to server
             while (true)

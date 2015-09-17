@@ -52,7 +52,6 @@ namespace Battleships
             }
             catch (Exception e)
             {
-                throw;
                 Console.WriteLine(e.Message);
             }
             while (_isConnected)
@@ -85,7 +84,6 @@ namespace Battleships
                             }
                             catch (Exception e)
                             {
-                                throw;
                                 Console.WriteLine(e.Message);
                             }
                         }

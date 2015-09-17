@@ -21,18 +21,6 @@ namespace Battleships
 
         static void Main(string[] args)
         {
-            //int ships = 10;
-            //Map map = new Map(1, 1, 10, 10);
-            //map.OccupyTile(1, 1, new Frigate(0, 0, true, map));
-            //map.PrintAllOccupiedTiles();
-            //map.Draw();
-            //Cruiser ms = new Cruiser(2, 2, true, map);
-            //ms.Draw();
-            //do
-            //{
-            //    ConsoleKey key = (ConsoleKey)Console.ReadKey(true).Key;
-            //    ships -= ms.MoveShip(key);
-            //} while (ships > 0);
             GameWorld gw = new GameWorld();
             gw.Play();
             Console.WriteLine("Press any key to continue to NETWORK!!!");
