@@ -13,6 +13,7 @@ namespace BattleshipServer
 {
     class Program
     {
+        #region Fields
         private const int port = 11000;
         private static bool done = false;
         private static string udpIP;
@@ -20,8 +21,6 @@ namespace BattleshipServer
         private static bool dataReceived;
         private static string sData;
         private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
-        private static Dictionary<StreamWriter, string> msgs = new Dictionary<StreamWriter, string>();
-        private static Dictionary<IPEndPoint, string> usernames = new Dictionary<IPEndPoint, string>();
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
@@ -29,6 +28,33 @@ namespace BattleshipServer
         private static object msgsLock = new object();
         private static object usernameLock = new object();
         private static TcpClient client;
+        private static List<GameWorld> gwList = new List<GameWorld>();
+        #endregion
+
+        #region Properties
+        public static Dictionary<IPEndPoint, StreamWriter> InfoSender
+        {
+            get { return Program.infoSender; }
+        }
+        private static Dictionary<StreamWriter, string> msgs = new Dictionary<StreamWriter, string>();
+
+        public static Dictionary<StreamWriter, string> Msgs
+        {
+            get { return Program.msgs; }
+            set { Program.msgs = value; }
+        }
+        private static Dictionary<IPEndPoint, string> usernames = new Dictionary<IPEndPoint, string>();
+
+        public static object MsgsLock
+        {
+            get { return Program.msgsLock; }
+            set { Program.msgsLock = value; }
+        }
+        public static Dictionary<IPEndPoint, string> Usernames
+        {
+            get { return Program.usernames; }
+        }
+        #endregion
 
         static void Main(string[] args)
         {
@@ -48,6 +74,7 @@ namespace BattleshipServer
 
         static void MatchMaking()
         {
+            
             while (true)
             {
                 if (connectedUsers.Count >= 2)
@@ -55,10 +82,22 @@ namespace BattleshipServer
                     matchedUsers.Add(connectedUsers[0]);
                     Console.WriteLine("Added user: {0}", connectedUsers[0]);
 
+                    sData = CipherUtility.Encrypt<AesManaged>("Matched", "password", "salt");
+                    lock (msgsLock)
+                    {
+                        msgs.Add(infoSender[connectedUsers[0]], sData);
+                    }
                     if(connectedUsers.Count >= 2)
                     {
                         matchedUsers.Add(connectedUsers[1]);
                         Console.WriteLine("Added user: {0}", connectedUsers[1]);
+
+                        sData = CipherUtility.Encrypt<AesManaged>("Matched", "password", "salt");
+                        lock (msgsLock)
+                        {
+                            msgs.Add(infoSender[connectedUsers[1]], sData);
+                        }
+                        gwList.Add(new GameWorld(connectedUsers[0], connectedUsers[1]));
                         connectedUsers.RemoveRange(0, 2);
                     }
                 }
@@ -96,10 +135,6 @@ namespace BattleshipServer
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
-            lock (connectedUsersLock)
-            {
-                connectedUsers.Add(endPoint);
-            }
             Console.WriteLine("Queued users: {0}", connectedUsers.Count);
             infoSender.Add(endPoint, sWriter);
 
@@ -118,14 +153,17 @@ namespace BattleshipServer
                 Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
                 UserDisconnected(endPoint);
             }
-
+            lock (connectedUsersLock)
+            {
+                connectedUsers.Add(endPoint);
+            }
             while (client.Connected)
             {
                 try
                 {
                     sData = sReader.ReadLine();
                     //Console.WriteLine("Encrypted data recieved: " + sData);
-                    string decrypted = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
+                    sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                     #region
                     //TIL SIDST I PROJEKTET SKAL DET VIRKE
                     /* if (!dataReceived)
@@ -144,7 +182,7 @@ namespace BattleshipServer
                     }
                     */
 #endregion
-                    Console.WriteLine("Data recieved and decrypted: " + decrypted);
+                    Console.WriteLine("Data recieved and decrypted: " + sData);
 
                 }
                 catch (Exception e)
@@ -153,25 +191,30 @@ namespace BattleshipServer
                     Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
                     UserDisconnected(endPoint);
                 }
-                //You could write something back to the client here.
-                //string msg = "Message";
-                //string encrypted = CipherUtility.Encrypt<AesManaged>(msg, "password", "salt");
-                ////Console.WriteLine("Encrypted data sent: " + encrypted);
-                //sWriter.WriteLine(encrypted);
-                //sWriter.Flush();
 
                 if (matchedUsers.Contains(endPoint))
                 {
                     try
                     {
-                        IPEndPoint tmpLocateUser = LocateUser(endPoint);
-                        sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
-                        sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
-                        lock (msgsLock)
+                        foreach (GameWorld gw in gwList)
                         {
-                            msgs.Add(infoSender[tmpLocateUser], sData);
+                            if (gw.playerOneEP == endPoint)
+                            {
+                                if (gw.PlayerOneTurn)
+                                {
+                                    gw.TurnMaster(endPoint,sData);
+                                }
+                                break;
+                            }
+                            else if (gw.playerTwoEP == endPoint)
+                            {
+                                if (!gw.PlayerOneTurn)
+                                {
+                                    gw.TurnMaster(endPoint,sData);
+                                }
+                                break;
+                            }
                         }
-
                     }
                     catch (Exception e)
                     {

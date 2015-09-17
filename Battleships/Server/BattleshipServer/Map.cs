@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Battleships
+namespace BattleshipServer
 {
     class Map
     {
@@ -79,7 +79,7 @@ namespace Battleships
         public void DrawHorizontalDigits(int posX, int posY, int length)
         {
             Console.SetCursorPosition(posX, posY);
-            for (int i = 0; i < length; i++)
+            for (int i = 1; i < length + 1; i++)
             {
                 Console.Write(i.ToString());
             }
@@ -100,7 +100,6 @@ namespace Battleships
         public void MarkTile(int posX, int posY, char c, ConsoleColor col)
         {
             tiles[posX, posY].SetCharacter(c, col);
-            Console.SetCursorPosition(0, 12);
         }
         public void OccupyTile(int posX, int posY, Ship ship)
         {
@@ -109,25 +108,7 @@ namespace Battleships
         }
         public bool CheckTile(int posX, int posY)
         {
-            if ((posX < width && posX > this.posX && posY < height && posY > this.posY))
-            {
-                bool occ = tiles[posX, posY].occupied;
-                return occ;
-            }
-            return false;
-        }
-        public void PrintAllOccupiedTiles()
-        {
-            string strTile = "";
-            foreach(Tile t in tiles)
-            {
-                if (t.occupied)
-                {
-                    strTile += "[" + t.posX + "," + t.posY + "] ";
-                }
-            }
-            Console.SetCursorPosition(0, 16);
-            Console.WriteLine(strTile);
+            return tiles[posX, posY].occupied;
         }
     }
 }
