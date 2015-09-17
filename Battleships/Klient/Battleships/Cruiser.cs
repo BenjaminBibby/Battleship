@@ -8,8 +8,8 @@ namespace Battleships
 {
     class Cruiser : Ship
     {
-        public Cruiser(int posX, int posY, bool horizontal)
-            : base(posX, posY, 4, horizontal)
+        public Cruiser(int posX, int posY, bool horizontal, Map map)
+            : base(posX, posY, 4, horizontal, map)
         { 
             
         }
