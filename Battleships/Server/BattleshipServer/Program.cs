@@ -13,6 +13,7 @@ namespace BattleshipServer
 {
     class Program
     {
+        #region Fields
         private const int port = 11000;
         private static bool done = false;
         private static string udpIP;
@@ -20,7 +21,17 @@ namespace BattleshipServer
         private static bool dataReceived;
         private static string sData;
         private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
+        private static TcpListener server;
+        private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
+        private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
+        private static object connectedUsersLock = new object();
+        private static object msgsLock = new object();
+        private static object usernameLock = new object();
+        private static TcpClient client;
+        private static List<GameWorld> gwList = new List<GameWorld>();
+        #endregion
 
+        #region Properties
         public static Dictionary<IPEndPoint, StreamWriter> InfoSender
         {
             get { return Program.infoSender; }
@@ -34,24 +45,16 @@ namespace BattleshipServer
         }
         private static Dictionary<IPEndPoint, string> usernames = new Dictionary<IPEndPoint, string>();
 
-        public static Dictionary<IPEndPoint, string> Usernames
-        {
-            get { return Program.usernames; }
-        }
-        private static TcpListener server;
-        private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
-        private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
-        private static object connectedUsersLock = new object();
-        private static object msgsLock = new object();
-
         public static object MsgsLock
         {
             get { return Program.msgsLock; }
             set { Program.msgsLock = value; }
         }
-        private static object usernameLock = new object();
-        private static TcpClient client;
-        private static List<GameWorld> gwList = new List<GameWorld>();
+        public static Dictionary<IPEndPoint, string> Usernames
+        {
+            get { return Program.usernames; }
+        }
+        #endregion
 
         static void Main(string[] args)
         {
@@ -200,12 +203,6 @@ namespace BattleshipServer
                                 if (gw.PlayerOneTurn)
                                 {
                                     gw.TurnMaster(endPoint,sData);
-                                    IPEndPoint tmpLocateUser = LocateUser(endPoint);
-                                    sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
-                                    lock (msgsLock)
-                                    {
-                                        msgs.Add(infoSender[tmpLocateUser], sData);
-                                    }
                                 }
                                 break;
                             }
@@ -214,12 +211,6 @@ namespace BattleshipServer
                                 if (!gw.PlayerOneTurn)
                                 {
                                     gw.TurnMaster(endPoint,sData);
-                                    IPEndPoint tmpLocateUser = LocateUser(endPoint);
-                                    sData = CipherUtility.Encrypt<AesManaged>(usernames[endPoint] + "> " + sData, "password", "salt");
-                                    lock (msgsLock)
-                                    {
-                                        msgs.Add(infoSender[tmpLocateUser], sData);
-                                    }
                                 }
                                 break;
                             }

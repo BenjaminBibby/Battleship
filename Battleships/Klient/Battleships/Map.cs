@@ -79,7 +79,7 @@ namespace Battleships
         public void DrawHorizontalDigits(int posX, int posY, int length)
         {
             Console.SetCursorPosition(posX, posY);
-            for (int i = 1; i < length + 1; i++)
+            for (int i = 0; i < length; i++)
             {
                 Console.Write(i.ToString());
             }
@@ -100,6 +100,7 @@ namespace Battleships
         public void MarkTile(int posX, int posY, char c, ConsoleColor col)
         {
             tiles[posX, posY].SetCharacter(c, col);
+            Console.SetCursorPosition(0, 12);
         }
         public void OccupyTile(int posX, int posY, Ship ship)
         {

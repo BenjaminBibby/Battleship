@@ -15,11 +15,13 @@ namespace Battleships
     class TCPClient
     {
         private TcpClient _client;
+        private GameWorld gw;
         private StreamWriter _sWriter;
         private bool _isConnected;
         private StreamReader _sReader;
         private static string sha256Calc;
         private string incomingData = null;
+        private static string username;
         private static string[] letterArray;
         private static string[] numberArray;
 
@@ -30,8 +32,7 @@ namespace Battleships
             CalculateSHA256();
             _client = new TcpClient();
             _client.Connect(ipAddress, portNum);
-            HandleCommunication();
-            
+            HandleCommunication();            
         }
         public void HandleCommunication()
         {
@@ -41,7 +42,8 @@ namespace Battleships
             string sData = null;
             Thread readThread = new Thread(Read);
             readThread.Start();
-            sData = Console.ReadLine();
+            sData = Console.ReadLine(); // Username
+            username = sData;
             string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
             _sWriter.WriteLine(encrypted);
             try
@@ -63,27 +65,34 @@ namespace Battleships
 
                 if (Program.Matched)
                 {
-                    string letter = sData.Remove(1);
-                    string number = sData.Substring(1);
-                    if (letterArray.Contains(letter) && numberArray.Contains(number))
+                    if (sData.Length > 1)
                     {
-                        encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
-                        _sWriter.WriteLine(encrypted);
-                        if (!Program.Matched)
-                        {
-                            Console.WriteLine("Waiting for opponenet..");
-                        }
+                        string letter = sData.Remove(1);
+                        string number = sData.Substring(1);
 
-                        try
+                        if (letterArray.Contains(letter) && numberArray.Contains(number))
                         {
-                            _sWriter.Flush();
+                            encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+                            _sWriter.WriteLine(encrypted);
+                            if (!Program.Matched)
+                            {
+                                Console.WriteLine("Waiting for opponenet..");
+                            }
+
+                            try
+                            {
+                                _sWriter.Flush();
+                            }
+                            catch (Exception e)
+                            {
+                                throw;
+                                Console.WriteLine(e.Message);
+                            }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            throw;
-                            Console.WriteLine(e.Message);
+                            Console.WriteLine("Wrong input format! Enter coordinates in this format 'a5', 'c3' etc.");
                         }
-                
                     }
                 }
 
@@ -106,11 +115,73 @@ namespace Battleships
                     {
                         Program.Matched = true;
                         Console.Clear();
-                        GameWorld gw = new GameWorld();
+                        gw = new GameWorld();
                     }
                     else
                     {
+                        string tileShot = decrypted.Substring(decrypted.Length - 2);
+                        int posY = 0;
+                        #region Switch
+                        switch (tileShot.Remove(1))
+                        {
+                            case "a":
+                                posY = 0;
+                                break;
+                            case "b":
+                                posY = 1;
+                                break;
+                            case "c":
+                                posY = 2;
+                                break;
+                            case "d":
+                                posY = 3;
+                                break;
+                            case "e":
+                                posY = 4;
+                                break;
+                            case "f":
+                                posY = 5;
+                                break;
+                            case "g":
+                                posY = 6;
+                                break;
+                            case "h":
+                                posY = 7;
+                                break;
+                            case "i":
+                                posY = 8;
+                                break;
+                            case "j":
+                                posY = 9;
+                                break;
+                        }
+                        #endregion
+
+                        if (decrypted.Contains("missed"))
+                        {
+                            if(decrypted.Contains(username))
+                            {
+                                gw.EnemyMap.MarkTile(int.Parse(tileShot.Substring(1)),posY,'M', ConsoleColor.Red);
+                            }
+                            else
+                            {
+                                gw.YourMap.MarkTile(int.Parse(tileShot.Substring(1)), posY, 'M', ConsoleColor.Green);
+                            }
+                        }
+                        else if(decrypted.Contains("hit"))
+                        {
+                            if (decrypted.Contains(username))
+                            {
+                                gw.EnemyMap.MarkTile(int.Parse(tileShot.Substring(1)), posY, 'H', ConsoleColor.Green);
+                            }
+                            else
+                            {
+                                gw.YourMap.MarkTile(int.Parse(tileShot.Substring(1)), posY, 'H', ConsoleColor.Red);
+                            }
+                        }
+
                         Console.WriteLine(decrypted);
+                        ClearCurrentConsoleLine();
                     }
                 }
                 catch (Exception e)
@@ -119,6 +190,14 @@ namespace Battleships
                     Console.ReadLine();
                 }
             }
+        }
+
+        public static void ClearCurrentConsoleLine()
+        {
+            int currentLineCursor = Console.CursorTop;
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, currentLineCursor);
         }
 
         public static void CalculateSHA256()

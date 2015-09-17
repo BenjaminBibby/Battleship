@@ -57,7 +57,7 @@ namespace BattleshipServer
                     posY = 5;
                     break;
                 case "g":
-                    posY = 6;
+                    posY = 6;   
                     break;
                 case "h":
                     posY = 7;
@@ -73,9 +73,8 @@ namespace BattleshipServer
             if (endPoint == playerOneEP)
             {
                 if (!playerTwoMap.CheckTile(int.Parse(number), posY))
-                {
-                    
-                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerOneEP]+" missed.", "password", "salt");
+                {                    
+                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerOneEP]+" missed at position: " + letter + number , "password", "salt");
                     lock (Program.MsgsLock)
                     {
                         Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
@@ -88,7 +87,7 @@ namespace BattleshipServer
             {
                 if (!playerOneMap.CheckTile(int.Parse(number), posY))
                 {
-                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerTwoEP] + " missed.", "password", "salt");
+                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerTwoEP]+ " missed at position: " + letter + number , "password", "salt");
                     lock (Program.MsgsLock)
                     {
                         Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
