@@ -12,9 +12,12 @@ namespace Battleships
         private bool turn;
         public GameWorld()
         {
-            Map[] maps = new Map[2];
-            maps[0] = new Map(1, 1, 10, 10);
-            maps[1] = new Map(13, 1, 10, 10);
+            
+            Map yourMap = new Map(1, 1, 10, 10);
+            Map enemyMap = new Map(13, 1, 10, 10);
+            yourMap.Draw();
+            enemyMap.Draw();
+            
         }
         private void Update()
         {

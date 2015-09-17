@@ -48,6 +48,7 @@ namespace BattleshipServer
 
         static void MatchMaking()
         {
+            
             while (true)
             {
                 if (connectedUsers.Count >= 2)
@@ -55,10 +56,22 @@ namespace BattleshipServer
                     matchedUsers.Add(connectedUsers[0]);
                     Console.WriteLine("Added user: {0}", connectedUsers[0]);
 
+                    sData = CipherUtility.Encrypt<AesManaged>("Matched", "password", "salt");
+                    lock (msgsLock)
+                    {
+                        msgs.Add(infoSender[connectedUsers[0]], sData);
+                    }
                     if(connectedUsers.Count >= 2)
                     {
                         matchedUsers.Add(connectedUsers[1]);
                         Console.WriteLine("Added user: {0}", connectedUsers[1]);
+
+                        sData = CipherUtility.Encrypt<AesManaged>("Matched", "password", "salt");
+                        lock (msgsLock)
+                        {
+                            msgs.Add(infoSender[connectedUsers[1]], sData);
+                        }
+                        
                         connectedUsers.RemoveRange(0, 2);
                     }
                 }

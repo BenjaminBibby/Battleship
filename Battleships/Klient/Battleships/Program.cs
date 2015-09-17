@@ -12,9 +12,16 @@ namespace Battleships
     class Program
     {
         private static string udpIP;
+        private static bool matched;
+
+        public static bool Matched
+        {
+            get { return Program.matched; }
+            set { Program.matched = value; }
+        }
+
         static void Main(string[] args)
         {
-           // Map map = new Map(1, 1, 10, 10);
             Console.Title = "Client";
             UDPClient();
             TCPServer();

@@ -73,6 +73,11 @@ namespace Battleships
                 {
                     incomingData = _sReader.ReadLine();
                     string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
+                    if (decrypted == "Matched")
+                    {
+                        Program.Matched = true;
+                        GameWorld gw = new GameWorld();
+                    }
                     Console.WriteLine(decrypted);
                 }
                 catch (Exception e)
