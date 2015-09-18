@@ -66,6 +66,29 @@ namespace Battleships
                 }
             }
         }
+
+        public string ReadMap()
+        {
+            string shipLocations = "";
+
+            for (int x = 0; x < height; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
+                    if(tiles[x,y].occupied)
+                    {
+                        shipLocations += "1,";
+                    }
+                    else
+                    {
+                        shipLocations += "0,";
+                    }
+                }
+            }
+
+            return shipLocations;
+        }
+
         public void DrawVerticalLetter(int posX, int posY, int length)
         {
             Char c = 'A';

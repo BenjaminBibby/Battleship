@@ -21,8 +21,6 @@ namespace Battleships
 
         static void Main(string[] args)
         {
-            GameWorld gw = new GameWorld();
-            gw.Play();
             Console.WriteLine("Press any key to continue to NETWORK!!!");
             Console.ReadLine();
 
