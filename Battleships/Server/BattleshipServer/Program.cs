@@ -165,10 +165,9 @@ namespace BattleshipServer
                     //Console.WriteLine("Encrypted data recieved: " + sData);
                     sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
                     #region
-                    //TIL SIDST I PROJEKTET SKAL DET VIRKE
-                    /* if (!dataReceived)
+                    if (!dataReceived)
                     {
-                        if (decrypted != "f4cefed49fb2f58655cde4c216f4e52a1f2aaaea0b5809664a97f075026f92bc")
+                        if (sData != "baae866ac1607d6fe25b3b57406d22d28e1bd2f9027daabfbbc44cf11e5e6050")
                         {
                             dataReceived = true;
                             Console.WriteLine("Client doesnt have the right MD5!");
@@ -180,8 +179,7 @@ namespace BattleshipServer
                             break;
                         }
                     }
-                    */
-#endregion
+                    #endregion
                     Console.WriteLine("Data recieved and decrypted: " + sData);
 
                 }

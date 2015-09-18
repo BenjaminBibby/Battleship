@@ -41,11 +41,16 @@ namespace Battleships
             _sReader = new StreamReader(_client.GetStream(), Encoding.UTF8);
             _isConnected = true;
             string sData = null;
+            sData = sha256Calc;
+            Console.WriteLine(sha256Calc);
+            string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+            _sWriter.WriteLine(encrypted);
+            _sWriter.Flush();
             Thread readThread = new Thread(Read);
             readThread.Start();
             sData = Console.ReadLine(); // Username
             username = sData;
-            string encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+            encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
             _sWriter.WriteLine(encrypted);
             try
             {
