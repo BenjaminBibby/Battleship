@@ -29,6 +29,31 @@ namespace BattleshipServer
             this.playerOneEP = playerOneEP;
             this.playerTwoEP = playerTwoEP;
         }
+        public void StringToMap(IPEndPoint endPoint, string mapInfo)
+        {
+            string[] map = mapInfo.Split(',');
+            int stringPos = 0;
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    if (map[stringPos] == "1")
+                    {
+                        if (endPoint == playerOneEP)
+                        {
+                            playerOneMap.OccupyTile(i, j);
+                        }
+                        else if (endPoint == playerTwoEP)
+                        {
+                            playerTwoMap.OccupyTile(i, j);
+                        }
+                    }
+                    stringPos++;
+                }
+            }
+            
+
+        }
         public void TurnMaster(IPEndPoint endPoint, string targetTile)
         {
 
@@ -82,6 +107,37 @@ namespace BattleshipServer
                     }
                     playerOneTurn = false;
                 }
+                else
+                {
+                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerOneEP] + " hit at position: " + letter + number, "password", "salt");
+                    lock (Program.MsgsLock)
+                    {
+                        Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
+                        Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
+                    }
+                        playerTwoMap.UnOccupyTile(int.Parse(number), posY);
+                        if(playerTwoMap.Win())
+                        {
+                            sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerOneEP] + " won!", "password", "salt");
+                            lock (Program.MsgsLock)
+                            {
+                                Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
+                                Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
+                            }
+                            lock (Program.ConnectedUsersLock)
+                            {
+
+                                    Program.MatchedUsers.Remove(playerTwoEP);
+                                    Program.MatchedUsers.Remove(playerOneEP);
+                                    Program.ConnectedUsers.Add(playerTwoEP);
+                                    Program.ConnectedUsers.Add(playerOneEP);
+
+                                
+                            }
+                        }
+                    
+                    
+                }
             }
             else if (endPoint == playerTwoEP)
             {
@@ -94,6 +150,35 @@ namespace BattleshipServer
                         Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
                     }
                     playerOneTurn = true;
+                }
+                else
+                {
+                    string sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerTwoEP] + " hit at position: " + letter + number, "password", "salt");
+                    lock (Program.MsgsLock)
+                    {
+                        Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
+                        Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
+                    }
+                        playerOneMap.UnOccupyTile(int.Parse(number), posY);
+                        if (playerOneMap.Win())
+                        {
+                            sData = CipherUtility.Encrypt<AesManaged>(Program.Usernames[playerTwoEP] + " won!", "password", "salt");
+                            lock (Program.MsgsLock)
+                            {
+                                Program.Msgs.Add(Program.InfoSender[playerOneEP], sData);
+                                Program.Msgs.Add(Program.InfoSender[playerTwoEP], sData);
+                            }
+                            lock (Program.ConnectedUsersLock)
+                            {
+                                
+                                    Program.MatchedUsers.Remove(playerTwoEP);
+                                    Program.MatchedUsers.Remove(playerOneEP);
+                                    Program.ConnectedUsers.Add(playerTwoEP);
+                                    Program.ConnectedUsers.Add(playerOneEP);
+                                
+                            }
+                        }
+                    
                 }
                 
             }
