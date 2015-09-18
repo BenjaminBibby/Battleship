@@ -8,7 +8,13 @@ namespace Battleships
 {
     class GameWorld
     {
-        private bool turn, move;
+        private bool turn, move, shipsPlaced;
+
+        public bool ShipsPlaced
+        {
+            get { return shipsPlaced; }
+            set { shipsPlaced = value; }
+        }
 
         private List<Ship> ships;
         Map yourMap;
@@ -25,12 +31,17 @@ namespace Battleships
         }
         public GameWorld()
         {
+            
+        }
+
+        public void GameSetup()
+        {
             Console.WriteLine("  Your map    Enemy map");
+            shipsPlaced = false;
             yourMap = new Map(1, 2, 10, 10);
             enemyMap = new Map(13, 2, 10, 10);
             yourMap.Draw();
             enemyMap.Draw();
-            
         }
         public void Play()
         {
@@ -64,19 +75,22 @@ namespace Battleships
                 }
                 // Place ships            
             }
+
+            shipsPlaced = true;
+
             foreach (Ship s in ships)
             {
                 s.Draw();
             }
             // Send map to server
-            while (true)
-            {
-                // Place coordinate on enemy map
-                // Send point to server
-                // Recieve hit
-                // Recieve enemy hit
-                // If enemy ships/your ships destroyed - Break
-            }
+            //while (true)
+            //{
+            //    // Place coordinate on enemy map
+            //    // Send point to server
+            //    // Recieve hit
+            //    // Recieve enemy hit
+            //    // If enemy ships/your ships destroyed - Break
+            //}
         }
 
     }

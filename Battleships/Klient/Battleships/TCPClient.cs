@@ -27,6 +27,7 @@ namespace Battleships
 
         public TCPClient(string ipAddress, int portNum)
         {
+            gw = new GameWorld();
             letterArray = new string[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" };
             numberArray = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
             CalculateSHA256();
@@ -59,37 +60,40 @@ namespace Battleships
                /* string md5Encrypt = CipherUtility.Encrypt<AesManaged>(sha256Calc, "password", "salt");
                 _sWriter.WriteLine(md5Encrypt);
                 _sWriter.Flush();*/
-
-                sData = Console.ReadLine();
-
-                if (Program.Matched)
+                if (gw.ShipsPlaced)
                 {
-                    if (sData.Length > 1)
+                    sData = Console.ReadLine();
+
+
+                    if (Program.Matched)
                     {
-                        string letter = sData.Remove(1);
-                        string number = sData.Substring(1);
-
-                        if (letterArray.Contains(letter) && numberArray.Contains(number))
+                        if (sData.Length > 1)
                         {
-                            encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
-                            _sWriter.WriteLine(encrypted);
-                            if (!Program.Matched)
-                            {
-                                Console.WriteLine("Waiting for opponenet..");
-                            }
+                            string letter = sData.Remove(1);
+                            string number = sData.Substring(1);
 
-                            try
+                            if (letterArray.Contains(letter) && numberArray.Contains(number))
                             {
-                                _sWriter.Flush();
+                                encrypted = CipherUtility.Encrypt<AesManaged>(sData, "password", "salt");
+                                _sWriter.WriteLine(encrypted);
+                                if (!Program.Matched)
+                                {
+                                    Console.WriteLine("Waiting for opponent..");
+                                }
+
+                                try
+                                {
+                                    _sWriter.Flush();
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e.Message);
+                                }
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Console.WriteLine(e.Message);
+                                Console.WriteLine("Wrong input format! Enter coordinates in this format 'a5', 'c3' etc.");
                             }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Wrong input format! Enter coordinates in this format 'a5', 'c3' etc.");
                         }
                     }
                 }
@@ -111,9 +115,15 @@ namespace Battleships
                     string decrypted = CipherUtility.Decrypt<AesManaged>(incomingData, "password", "salt");
                     if (decrypted == "Matched")
                     {
+                        Console.Clear();
+                        Console.SetCursorPosition(40, 40);
                         Program.Matched = true;
                         Console.Clear();
-                        gw = new GameWorld();
+                        gw.GameSetup();
+                        gw.Play();
+                        string sData = CipherUtility.Encrypt<AesManaged>(gw.YourMap.ReadMap(), "password", "salt");
+                        _sWriter.WriteLine(sData);
+                        _sWriter.Flush();
                     }
                     else
                     {
