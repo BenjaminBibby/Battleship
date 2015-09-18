@@ -101,10 +101,28 @@ namespace BattleshipServer
         {
             tiles[posX, posY].SetCharacter(c, col);
         }
-        public void OccupyTile(int posX, int posY, Ship ship)
+        public void OccupyTile(int posX, int posY)
         {
             tiles[posX, posY].occupied = true;
-            tiles[posX, posY].occupiedShip = ship;
+        }
+        public void UnOccupyTile(int posX, int posY)
+        {
+            tiles[posX, posY].occupied = false;
+        }
+        public bool Win()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    if (tiles[i, j].occupied == true)
+                    {
+                        return false;
+                    }
+                }
+                
+            }
+            return true;
         }
         public bool CheckTile(int posX, int posY)
         {
