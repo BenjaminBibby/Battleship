@@ -169,7 +169,7 @@ namespace Battleships
         public bool PlaceFree_Y(int dir)
         {
             int height = isHorizontal == true ? 0 : size;
-            if ((dir >= 0 && ((posY + height + dir) < (map.PosY + map.Height - 1))) || (dir <= 0 && ((posY + dir) >= map.PosY - 1)))
+            if ((dir >= 0 && ((posY + height + dir) < (map.PosY + map.Height - 2))) || (dir <= 0 && ((posY + dir) >= map.PosY - 1)))
             {
                 if (dir > 0)
                 {

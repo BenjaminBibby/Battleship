@@ -72,7 +72,7 @@ namespace Battleships
             while (true)
             {
                 // Place coordinate on enemy map
-                // Send point to server
+                // Send point bto server
                 // Recieve hit
                 // Recieve enemy hit
                 // If enemy ships/your ships destroyed - Break
