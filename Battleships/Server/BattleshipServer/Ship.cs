@@ -58,7 +58,7 @@ namespace BattleshipServer
                 int nextPosX = (isHorizontal == true ? posX + i : posX);
                 int nextPosY = (isHorizontal == true ? posY : posY + i);
 
-                map.OccupyTile(posX, posY, this);
+                map.OccupyTile(posX, posY);
                 Draw();
             }
         }

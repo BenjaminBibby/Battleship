@@ -23,8 +23,26 @@ namespace BattleshipServer
         private static Dictionary<IPEndPoint, StreamWriter> infoSender = new Dictionary<IPEndPoint, StreamWriter>();
         private static TcpListener server;
         private static List<IPEndPoint> connectedUsers = new List<IPEndPoint>();
+
+        public static List<IPEndPoint> ConnectedUsers
+        {
+            get { return Program.connectedUsers; }
+            set { Program.connectedUsers = value; }
+        }
         private static List<IPEndPoint> matchedUsers = new List<IPEndPoint>();
+
+        public static List<IPEndPoint> MatchedUsers
+        {
+            get { return Program.matchedUsers; }
+            set { Program.matchedUsers = value; }
+        }
         private static object connectedUsersLock = new object();
+
+        public static object ConnectedUsersLock
+        {
+            get { return Program.connectedUsersLock; }
+            set { Program.connectedUsersLock = value; }
+        }
         private static object msgsLock = new object();
         private static object usernameLock = new object();
         private static TcpClient client;
@@ -135,7 +153,7 @@ namespace BattleshipServer
             IPEndPoint endPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             IPEndPoint localEndPoint = (IPEndPoint)client.Client.LocalEndPoint;
             Console.WriteLine(endPoint + " connected!");
-            Console.WriteLine("Queued users: {0}", connectedUsers.Count);
+            
             infoSender.Add(endPoint, sWriter);
 
             string simon = "Enter username: ";
@@ -156,19 +174,31 @@ namespace BattleshipServer
             lock (connectedUsersLock)
             {
                 connectedUsers.Add(endPoint);
+                Console.WriteLine("Queued users: {0}", connectedUsers.Count);
             }
             while (client.Connected)
             {
                 try
                 {
                     sData = sReader.ReadLine();
-                    //Console.WriteLine("Encrypted data recieved: " + sData);
                     sData = CipherUtility.Decrypt<AesManaged>(sData, "password", "salt");
-                    #region
-                    //TIL SIDST I PROJEKTET SKAL DET VIRKE
-                    /* if (!dataReceived)
+                    //Console.WriteLine("Encrypted data recieved: " + sData);
+                    if (sData.Length > 2)
                     {
-                        if (decrypted != "f4cefed49fb2f58655cde4c216f4e52a1f2aaaea0b5809664a97f075026f92bc")
+                        foreach (GameWorld gw in gwList)
+                        {
+                            if (gw.playerOneEP == endPoint || gw.playerTwoEP == endPoint)
+                            {
+                                gw.StringToMap(endPoint, sData);
+                                
+                            }
+                        }
+                    }
+                    
+                    #region
+                    if (!dataReceived)
+                    {
+                        if (sData != "baae866ac1607d6fe25b3b57406d22d28e1bd2f9027daabfbbc44cf11e5e6050")
                         {
                             dataReceived = true;
                             Console.WriteLine("Client doesnt have the right MD5!");
@@ -180,14 +210,13 @@ namespace BattleshipServer
                             break;
                         }
                     }
-                    */
-#endregion
+                    #endregion
                     Console.WriteLine("Data recieved and decrypted: " + sData);
 
                 }
                 catch (Exception e)
                 {
-                    //Console.WriteLine(e.Message);
+                    Console.WriteLine(e.Message);
                     Console.WriteLine(client.Client.RemoteEndPoint + " disconnected!");
                     UserDisconnected(endPoint);
                 }
